@@ -336,7 +336,7 @@ export default function SnakeGame({ onGameOver }) {
             if (nx < leftBound || ny < topBound || nx > rightBound || ny > bottomBound) {
                 try { game.destroy(true); } catch (e) { }
                 window._phaserGame = null;
-                onGameOverRef.current?.(score);
+                onGameOverRef.current?.(-10); // -10 for hitting wall
                 return;
             }
 
@@ -345,7 +345,7 @@ export default function SnakeGame({ onGameOver }) {
             const ate = food && Math.round(nx) === Math.round(food.x) && Math.round(ny) === Math.round(food.y);
             if (!ate) snakePos.pop();
             else {
-                score += 10;
+                score += 1;
                 if (scoreText) scoreText.setText("Score: " + score);
             }
 
@@ -384,7 +384,7 @@ export default function SnakeGame({ onGameOver }) {
                 if (snakePos[i].x === snakePos[0].x && snakePos[i].y === snakePos[0].y) {
                     try { game.destroy(true); } catch (e) { }
                     window._phaserGame = null;
-                    onGameOverRef.current?.(score);
+                    onGameOverRef.current?.(-10); // -10 for self collision
                     return;
                 }
             }

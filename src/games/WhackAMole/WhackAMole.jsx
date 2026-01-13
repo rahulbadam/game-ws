@@ -11,7 +11,7 @@ export default function WhackAMole({ onGameOver }) {
 
     setTimeout(() => {
       clearInterval(interval);
-      onGameOver(score);
+      onGameOver(10); // +10 for completing the game
     }, 10000);
 
     return () => clearInterval(interval);

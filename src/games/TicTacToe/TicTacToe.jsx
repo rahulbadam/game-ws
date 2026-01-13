@@ -139,7 +139,8 @@ export default function TicTacToe({ onGameOver }) {
     setGameOver(true);
 
     timeoutRef.current = setTimeout(() => {
-      onGameOver(foundWinner.player === "X" ? -10 : 10);
+      // Player (X) win = +10, AI (O) win = -10
+      onGameOver(foundWinner.player === "X" ? 10 : -10);
     }, 1000);
   };
 

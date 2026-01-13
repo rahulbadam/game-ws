@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const symbols = ["🍎", "🍌", "🍇", "🍒"];
+const symbols = ["🍎", "🍌", "🍇", "🍒", "🍑", "🍊"];
 
 export default function MemoryMatch({ onGameOver }) {
   const shuffled = [...symbols, ...symbols].sort(() => 0.5 - Math.random());
@@ -17,7 +17,7 @@ export default function MemoryMatch({ onGameOver }) {
       const [a, b] = newFlipped;
       if (cards[a] === cards[b]) {
         setMatched([...matched, cards[a]]);
-        if (matched.length + 1 === symbols.length) onGameOver(20);
+        if (matched.length + 1 === symbols.length) onGameOver(10);
       }
       setTimeout(() => setFlipped([]), 700);
     }

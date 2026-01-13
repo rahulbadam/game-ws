@@ -8,8 +8,10 @@ export default function RockPaperScissors({ onGameOver }) {
   const play = (choice) => {
     const computer = choices[Math.floor(Math.random() * 3)];
 
-    if (choice === computer) setResult("Draw");
-    else if (
+    if (choice === computer) {
+      setResult("Draw");
+      onGameOver(0);
+    } else if (
       (choice === "Rock" && computer === "Scissors") ||
       (choice === "Paper" && computer === "Rock") ||
       (choice === "Scissors" && computer === "Paper")
@@ -18,7 +20,7 @@ export default function RockPaperScissors({ onGameOver }) {
       onGameOver(10);
     } else {
       setResult("You Lose!");
-      onGameOver(2);
+      onGameOver(-10);
     }
   };
 
