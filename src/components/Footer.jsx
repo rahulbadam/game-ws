@@ -6,6 +6,8 @@ export default function Footer() {
       <div className="max-w-5xl mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
         <div className="text-xs">&copy; {new Date().getFullYear()} Game WS</div>
         <div className="flex items-center gap-2 text-xs">
+          <Link to="/" className="hover:text-white">Home</Link>
+          <span className="text-gray-600">|</span>
           <Link to="/about" className="hover:text-white">About</Link>
           <span className="text-gray-600">|</span>
           <Link to="/privacy-policy" className="hover:text-white">Privacy</Link>

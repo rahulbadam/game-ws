@@ -8,7 +8,7 @@ export default function Contact() {
       </p>
 
       <p className="text-gray-300">
-        📧 Email: <span className="text-blue-400">contact@yourdomain.com</span>
+        📧 Email: <span className="text-blue-400">rahulbadam000@gmail.com</span>
       </p>
     </div>
   );

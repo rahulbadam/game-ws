@@ -12,7 +12,7 @@ function App() {
   return (
     <BrowserRouter>
       <div className="min-h-screen flex flex-col">
-        <main className="flex-grow pb-20">
+        <main className="flex-grow pb-20 bg-black">
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/play/:gameId" element={<PlayGame />} />

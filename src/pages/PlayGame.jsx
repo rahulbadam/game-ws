@@ -19,30 +19,54 @@ export default function PlayGame() {
     setScores(topScores);
   };
 
+  const renderGame = () => {
+    let gameId = window.location.pathname.split("/").pop();
+    switch (gameId) {
+      case "snake":
+        return (
+          <SnakeGame
+            onGameOver={(score) => handleGameOver("snake", score)}
+          />
+        );
+
+      case "tic-tac-toe":
+        return (
+          <TicTacToe
+            onGameOver={(score) => handleGameOver("tic-tac-toe", score)}
+          />
+        );
+
+      case "rock-paper-scissors":
+        return (
+          <RockPaperScissors
+            onGameOver={(score) => handleGameOver("rock-paper-scissors", score)}
+          />
+        );
+
+      case "memory-match":
+        return (
+          <MemoryMatch
+            onGameOver={(score) => handleGameOver("memory-match", score)}
+          />
+        );
+
+      case "whack-a-mole":
+        return (
+          <WhackAMole
+            onGameOver={(score) => handleGameOver("whack-a-mole", score)}
+          />
+        );
+
+      default:
+        return null;
+    }
+  };
+
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
       {gameOverScore === null && (
-        <>
-          if (gameId === "snake")
-          return <SnakeGame onGameOver={(score) => handleGameOver("snake", score)} />
-
-          if (gameId === "tic-tac-toe")
-          return <TicTacToe
-            onGameOver={(score) =>
-              handleGameOver("tic-tac-toe", score)
-            }
-          />
-
-          if (gameId === "rock-paper-scissors")
-          return <RockPaperScissors onGameOver={(s) => handleGameOver(gameId, s)} />;
-
-          if (gameId === "memory-match")
-          return <MemoryMatch onGameOver={(s) => handleGameOver(gameId, s)} />;
-
-          if (gameId === "whack-a-mole")
-          return <WhackAMole onGameOver={(s) => handleGameOver(gameId, s)} />;
-
-        </>
+        renderGame()
       )}
 
       {gameOverScore !== null && (
