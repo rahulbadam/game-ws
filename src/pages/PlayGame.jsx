@@ -6,7 +6,7 @@ import Footer from "../components/Footer";
 import RockPaperScissors from "../games/RockPaperScissors/RockPaperScissors";
 import MemoryMatch from "../games/MemoryMatch/MemoryMatch";
 import WhackAMole from "../games/WhackAMole/WhackAMole";
-
+import { Helmet } from "react-helmet-async";
 
 export default function PlayGame() {
   const [gameOverScore, setGameOverScore] = useState(null);
