@@ -5,11 +5,14 @@ import { Helmet } from "react-helmet-async";
 
 export default function Home() {
   return (
-    <Helmet><title>Play Free Online Games | Simple Browser Games</title>
-      <meta
-        name="description"
-        content="Play free online browser games including Snake, Tic Tac Toe, Memory Match and more. No download required."
-      />
+    <>
+      <Helmet>
+        <title>Play Free Online Games | Simple Browser Games</title>
+        <meta
+          name="description"
+          content="Play free online browser games including Snake, Tic Tac Toe, Memory Match and more. No download required."
+        />
+      </Helmet>
       <div className="min-h-screen bg-black text-white p-8">
         <h1 className="text-4xl font-extrabold mb-2">
           🎮 Play Simple Games
@@ -25,7 +28,6 @@ export default function Home() {
         </div>
         <Footer />
       </div>
-    </Helmet>
-
+    </>
   );
 }

@@ -64,7 +64,11 @@ export default function PlayGame() {
 
 
   return (
-    <Helmet>
+    <>
+      <Helmet>
+        <title>Play Game</title>
+      </Helmet>
+
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
         {gameOverScore === null && (
           renderGame()
@@ -86,6 +90,6 @@ export default function PlayGame() {
         )}
         <Footer />
       </div>
-    </Helmet>
+    </>
   );
 }
