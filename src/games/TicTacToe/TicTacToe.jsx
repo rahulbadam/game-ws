@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 
 const winningCombos = [
-  [0,1,2],[3,4,5],[6,7,8],
-  [0,3,6],[1,4,7],[2,5,8],
-  [0,4,8],[2,4,6]
+  [0, 1, 2], [3, 4, 5], [6, 7, 8],
+  [0, 3, 6], [1, 4, 7], [2, 5, 8],
+  [0, 4, 8], [2, 4, 6]
 ];
 
 export default function TicTacToe({ onGameOver }) {
@@ -169,16 +169,16 @@ export default function TicTacToe({ onGameOver }) {
   const status = winner
     ? `Winner: ${winner.player === "X" ? "You" : "AI"}`
     : gameOver
-    ? "Draw"
-    : isXNext
-    ? "Your Turn (X)"
-    : "AI Thinking...";
+      ? "Draw"
+      : isXNext
+        ? "Your Turn (X)"
+        : "AI Thinking...";
 
   return (
     <div>
-      <div className="mb-4 text-lg font-semibold">{status}</div>
+      <div className="mb-4 text-base md:text-lg font-semibold">{status}</div>
 
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
         {board.map((cell, i) => {
           const highlight =
             winner?.combo?.includes(i) ? "bg-green-600" : "";
@@ -186,7 +186,7 @@ export default function TicTacToe({ onGameOver }) {
             <button
               key={i}
               onClick={() => handleClick(i)}
-              className={`w-20 h-20 bg-gray-800 text-3xl font-bold rounded hover:bg-gray-700 ${highlight}`}
+              className={`w-16 h-16 md:w-20 md:h-20 bg-gray-800 text-2xl md:text-3xl font-bold rounded hover:bg-gray-700 ${highlight}`}
             >
               {cell}
             </button>
@@ -197,7 +197,7 @@ export default function TicTacToe({ onGameOver }) {
       <div className="mt-4">
         <button
           onClick={handleRestart}
-          className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-500"
+          className="px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-sm md:text-base rounded hover:bg-blue-500"
         >
           Restart
         </button>

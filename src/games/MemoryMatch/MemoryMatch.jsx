@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const symbols = ["🍎","🍌","🍇","🍒"];
+const symbols = ["🍎", "🍌", "🍇", "🍒"];
 
 export default function MemoryMatch({ onGameOver }) {
   const shuffled = [...symbols, ...symbols].sort(() => 0.5 - Math.random());
@@ -24,12 +24,12 @@ export default function MemoryMatch({ onGameOver }) {
   };
 
   return (
-    <div className="grid grid-cols-4 gap-2">
+    <div className="grid grid-cols-3 md:grid-cols-4 gap-2 max-w-xs mx-auto">
       {cards.map((c, i) => (
         <button
           key={i}
           onClick={() => flip(i)}
-          className="w-16 h-16 bg-gray-800 text-2xl rounded"
+          className="w-14 h-14 md:w-16 md:h-16 bg-gray-800 text-xl md:text-2xl rounded"
         >
           {flipped.includes(i) || matched.includes(c) ? c : "❓"}
         </button>

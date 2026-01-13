@@ -75,13 +75,13 @@ export default function PlayGame() {
         )}
 
         {gameOverScore !== null && (
-          <div className="bg-gray-900 p-6 rounded-xl w-80">
-            <h2 className="text-xl mb-2">Game Over</h2>
-            <p className="mb-2">Score: {gameOverScore}</p>
+          <div className="bg-gray-900 p-4 md:p-6 rounded-xl w-full max-w-sm mx-auto">
+            <h2 className="text-lg md:text-xl mb-2">Game Over</h2>
+            <p className="mb-2 text-sm md:text-base">Score: {gameOverScore}</p>
 
-            <h3 className="font-bold mb-2">🏆 Leaderboard</h3>
+            <h3 className="font-bold mb-2 text-sm md:text-base">🏆 Leaderboard</h3>
             {scores.map((s, i) => (
-              <div key={i} className="flex justify-between text-sm">
+              <div key={i} className="flex justify-between text-xs md:text-sm">
                 <span>{s.player}</span>
                 <span>{s.score}</span>
               </div>

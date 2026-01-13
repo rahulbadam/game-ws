@@ -24,19 +24,19 @@ export default function RockPaperScissors({ onGameOver }) {
 
   return (
     <div className="text-center">
-      <h2 className="text-xl mb-4">Choose One</h2>
-      <div className="flex gap-4 justify-center">
+      <h2 className="text-lg md:text-xl mb-4">Choose One</h2>
+      <div className="flex gap-2 md:gap-4 justify-center flex-wrap">
         {choices.map(c => (
           <button
             key={c}
             onClick={() => play(c)}
-            className="bg-gray-800 px-4 py-2 rounded hover:bg-gray-700"
+            className="bg-gray-800 px-3 py-2 md:px-4 md:py-2 rounded text-sm md:text-base hover:bg-gray-700"
           >
             {c}
           </button>
         ))}
       </div>
-      <p className="mt-4">{result}</p>
+      <p className="mt-4 text-sm md:text-base">{result}</p>
     </div>
   );
 }

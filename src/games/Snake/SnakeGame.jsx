@@ -41,7 +41,7 @@ export default function SnakeGame({ onGameOver }) {
 
     useEffect(() => {
         if (window._phaserGame) {
-            try { window._phaserGame.destroy(true); } catch (e) {}
+            try { window._phaserGame.destroy(true); } catch (e) { }
             window._phaserGame = null;
         }
 
@@ -136,7 +136,7 @@ export default function SnakeGame({ onGameOver }) {
                 if (attempts > 2000) break;
             } while (snakePos.some(p => p.x === nx && p.y === ny));
             if (food) {
-                try { food.destroy(); } catch (e) {}
+                try { food.destroy(); } catch (e) { }
             }
             food = scene.add.image(nx, ny, "food").setDepth(1).setDisplaySize(GRID_SIZE * 0.9, GRID_SIZE * 0.9).setOrigin(0.5);
             scene.tweens.add({
@@ -279,7 +279,7 @@ export default function SnakeGame({ onGameOver }) {
             try {
                 snake.forEach(s => s.destroy());
                 if (food) food.destroy();
-            } catch (e) {}
+            } catch (e) { }
             snake = [];
             snakePos = [];
             score = 0;
@@ -334,7 +334,7 @@ export default function SnakeGame({ onGameOver }) {
             const rightBound = (GRID_PIXEL_SIDE - CELL_OFFSET) + 0.5;
             const bottomBound = UI_BAR_HEIGHT + GRID_PIXEL_SIDE - CELL_OFFSET + 0.5;
             if (nx < leftBound || ny < topBound || nx > rightBound || ny > bottomBound) {
-                try { game.destroy(true); } catch (e) {}
+                try { game.destroy(true); } catch (e) { }
                 window._phaserGame = null;
                 onGameOverRef.current?.(score);
                 return;
@@ -382,7 +382,7 @@ export default function SnakeGame({ onGameOver }) {
 
             for (let i = 1; i < snakePos.length; i++) {
                 if (snakePos[i].x === snakePos[0].x && snakePos[i].y === snakePos[0].y) {
-                    try { game.destroy(true); } catch (e) {}
+                    try { game.destroy(true); } catch (e) { }
                     window._phaserGame = null;
                     onGameOverRef.current?.(score);
                     return;
@@ -392,7 +392,7 @@ export default function SnakeGame({ onGameOver }) {
 
         return () => {
             if (gameRef.current) {
-                try { gameRef.current.destroy(true); } catch (e) {}
+                try { gameRef.current.destroy(true); } catch (e) { }
                 if (window._phaserGame === gameRef.current) window._phaserGame = null;
                 gameRef.current = null;
             }
@@ -408,9 +408,9 @@ export default function SnakeGame({ onGameOver }) {
                 height: containerHeightPx,
                 maxWidth: "100%",
                 maxHeight: "calc(100vh - 40px)",
-                margin: "12px auto",
+                margin: "8px auto",
                 boxSizing: "border-box",
-                padding: 6,
+                padding: 4,
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",

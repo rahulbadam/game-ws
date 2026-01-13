@@ -13,15 +13,15 @@ export default function Home() {
           content="Play free online browser games including Snake, Tic Tac Toe, Memory Match and more. No download required."
         />
       </Helmet>
-      <div className="min-h-screen bg-black text-white p-8">
-        <h1 className="text-4xl font-extrabold mb-2">
+      <div className="min-h-screen bg-black text-white p-4 md:p-8">
+        <h1 className="text-3xl md:text-4xl font-extrabold mb-2">
           🎮 Play Simple Games
         </h1>
-        <p className="text-gray-400 mb-8">
+        <p className="text-gray-400 mb-6 md:mb-8">
           Free browser games. No downloads.
         </p>
 
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3">
+        <div className="grid gap-4 md:gap-6 sm:grid-cols-2 md:grid-cols-3">
           {games.map(game => (
             <GameCard key={game.id} game={game} />
           ))}
