@@ -1,13 +1,16 @@
-import SnakeGame from "../games/Snake/SnakeGame";
-import TicTacToe from "../games/TicTacToe/TicTacToe";
 import { saveScore, getTopScores } from "../services/leaderboard";
 import { updateGlobalScore, getGlobalScore } from "../services/globalScore";
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
+import { Link } from "react-router-dom";
 import Footer from "../components/Footer";
-import RockPaperScissors from "../games/RockPaperScissors/RockPaperScissors";
-import MemoryMatch from "../games/MemoryMatch/MemoryMatch";
-import WhackAMole from "../games/WhackAMole/WhackAMole";
 import { Helmet } from "react-helmet-async";
+
+// Lazy load all game components
+const SnakeGame = lazy(() => import("../games/Snake/SnakeGame"));
+const TicTacToe = lazy(() => import("../games/TicTacToe/TicTacToe"));
+const RockPaperScissors = lazy(() => import("../games/RockPaperScissors/RockPaperScissors"));
+const MemoryMatch = lazy(() => import("../games/MemoryMatch/MemoryMatch"));
+const WhackAMole = lazy(() => import("../games/WhackAMole/WhackAMole"));
 
 export default function PlayGame() {
   const [gameOverScore, setGameOverScore] = useState(null);
@@ -91,9 +94,38 @@ export default function PlayGame() {
         <title>Play Game</title>
       </Helmet>
 
-      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center relative">
+        {/* Back Button - Fixed Position */}
+        <Link
+          to="/"
+          className="fixed top-4 left-4 z-50 bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 animate-fade-in"
+          title="Back to Home"
+        >
+          <svg
+            className="w-6 h-6"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M15 19l-7-7 7-7"
+            />
+          </svg>
+        </Link>
+
         {gameOverScore === null ? (
-          renderGame()
+          <Suspense fallback={
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+              <p className="text-gray-400 animate-pulse">Loading game...</p>
+            </div>
+          }>
+            {renderGame()}
+          </Suspense>
         ) : (
           <div className="bg-gray-900 p-4 md:p-6 rounded-xl w-full max-w-sm mx-auto animate-fade-in">
             <h2 className="text-lg md:text-xl mb-2">Game Over</h2>
@@ -115,9 +147,14 @@ export default function PlayGame() {
 
             <button
               onClick={playAgain}
-              className="mt-4 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-lg transform transition-all duration-300 hover:scale-105 hover:shadow-lg animate-pulse-once"
+              className="mt-4 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-4 rounded-lg transform transition-all duration-500 hover:scale-110 hover:shadow-xl hover:shadow-green-500/50 animate-bounce-gentle relative overflow-hidden group"
             >
-              🔄 Play Again
+              {/* Shimmer effect */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 animate-shimmer"></div>
+              <span className="relative z-10 flex items-center justify-center space-x-2">
+                <span className="animate-spin-once">🔄</span>
+                <span>Play Again</span>
+              </span>
             </button>
           </div>
         )}

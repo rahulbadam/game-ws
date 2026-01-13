@@ -177,6 +177,19 @@ export default function TicTacToe({ onGameOver }) {
 
   return (
     <div>
+      {/* Instructions */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-4 text-center">
+        <h3 className="text-lg font-bold text-blue-400 mb-2">⭕ Tic Tac Toe – How to Play</h3>
+        <ul className="text-sm text-gray-300 space-y-1 text-left max-w-md mx-auto">
+          <li>• Click on empty squares to place your X</li>
+          <li>• Get three X's in a row (horizontal, vertical, or diagonal) to win</li>
+          <li>• Block your opponent (AI) from getting three O's in a row</li>
+        </ul>
+        <p className="text-xs text-gray-400 mt-2 italic">
+          Tic Tac Toe is a strategic thinking game that enhances planning and pattern recognition skills.
+        </p>
+      </div>
+
       <div className="mb-4 text-base md:text-lg font-semibold">{status}</div>
 
       <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">

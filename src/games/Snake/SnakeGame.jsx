@@ -400,22 +400,37 @@ export default function SnakeGame({ onGameOver }) {
     }, [containerWidth, GRID, GRID_COUNT, CANVAS_WIDTH, CANVAS_HEIGHT]);
 
     return (
-        <div
-            id="game-container"
-            ref={containerRef}
-            style={{
-                width: containerWidth,
-                height: containerHeightPx,
-                maxWidth: "100%",
-                maxHeight: "calc(100vh - 40px)",
-                margin: "8px auto",
-                boxSizing: "border-box",
-                padding: 4,
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                overflow: "hidden",
-            }}
-        />
+        <div className="w-full">
+            {/* Instructions */}
+            <div className="bg-gray-800 rounded-lg p-4 mb-4 text-center">
+                <h3 className="text-lg font-bold text-green-400 mb-2">🐍 Snake Game – How to Play</h3>
+                <ul className="text-sm text-gray-300 space-y-1 text-left max-w-md mx-auto">
+                    <li>• Use arrow keys (or swipe on mobile) to control the snake</li>
+                    <li>• Eat the food to grow longer and score points</li>
+                    <li>• Avoid hitting the walls or the snake's own body</li>
+                </ul>
+                <p className="text-xs text-gray-400 mt-2 italic">
+                    Snake is a classic arcade game that improves focus and reaction speed.
+                </p>
+            </div>
+
+            <div
+                id="game-container"
+                ref={containerRef}
+                style={{
+                    width: containerWidth,
+                    height: containerHeightPx,
+                    maxWidth: "100%",
+                    maxHeight: "calc(100vh - 40px)",
+                    margin: "8px auto",
+                    boxSizing: "border-box",
+                    padding: 4,
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    overflow: "hidden",
+                }}
+            />
+        </div>
     );
 }

@@ -26,6 +26,19 @@ export default function RockPaperScissors({ onGameOver }) {
 
   return (
     <div className="text-center">
+      {/* Instructions */}
+      <div className="bg-gray-800 rounded-lg p-4 mb-4">
+        <h3 className="text-lg font-bold text-red-400 mb-2">✂️ Rock Paper Scissors – How to Play</h3>
+        <ul className="text-sm text-gray-300 space-y-1 text-left max-w-md mx-auto">
+          <li>• Choose Rock, Paper, or Scissors</li>
+          <li>• Rock beats Scissors, Scissors beats Paper, Paper beats Rock</li>
+          <li>• Match your choice against the computer's random selection</li>
+        </ul>
+        <p className="text-xs text-gray-400 mt-2 italic">
+          Rock Paper Scissors is a quick decision-making game that tests your instincts and reflexes.
+        </p>
+      </div>
+
       <h2 className="text-lg md:text-xl mb-4">Choose One</h2>
       <div className="flex gap-2 md:gap-4 justify-center flex-wrap">
         {choices.map(c => (
