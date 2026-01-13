@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://game-ws.netlify.app/sitemap.xml

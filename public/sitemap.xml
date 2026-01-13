@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://game-ws.netlify.app/</loc>
+  </url>
+  <url>
+    <loc>https://game-ws.netlify.app/play/snake</loc>
+  </url>
+  <url>
+    <loc>https://game-ws.netlify.app/play/tic-tac-toe</loc>
+  </url>
+  <url>
+    <loc>https://game-ws.netlify.app/play/rock-paper-scissors</loc>
+  </url>
+  <url>
+    <loc>https://game-ws.netlify.app/play/memory-match</loc>
+  </url>
+  <url>
+    <loc>https://game-ws.netlify.app/play/whack-a-mole</loc>
+  </url>
+</urlset>

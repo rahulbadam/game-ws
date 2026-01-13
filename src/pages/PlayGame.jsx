@@ -64,26 +64,28 @@ export default function PlayGame() {
 
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
-      {gameOverScore === null && (
-        renderGame()
-      )}
+    <Helmet>
+      <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center">
+        {gameOverScore === null && (
+          renderGame()
+        )}
 
-      {gameOverScore !== null && (
-        <div className="bg-gray-900 p-6 rounded-xl w-80">
-          <h2 className="text-xl mb-2">Game Over</h2>
-          <p className="mb-2">Score: {gameOverScore}</p>
+        {gameOverScore !== null && (
+          <div className="bg-gray-900 p-6 rounded-xl w-80">
+            <h2 className="text-xl mb-2">Game Over</h2>
+            <p className="mb-2">Score: {gameOverScore}</p>
 
-          <h3 className="font-bold mb-2">🏆 Leaderboard</h3>
-          {scores.map((s, i) => (
-            <div key={i} className="flex justify-between text-sm">
-              <span>{s.player}</span>
-              <span>{s.score}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      <Footer />
-    </div>
+            <h3 className="font-bold mb-2">🏆 Leaderboard</h3>
+            {scores.map((s, i) => (
+              <div key={i} className="flex justify-between text-sm">
+                <span>{s.player}</span>
+                <span>{s.score}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <Footer />
+      </div>
+    </Helmet>
   );
 }
