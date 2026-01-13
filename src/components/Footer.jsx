@@ -25,6 +25,14 @@ export default function Footer() {
           </Link>
           <span className="text-gray-600 animate-pulse">|</span>
           <Link
+            to="/faq"
+            className="hover:text-white hover:scale-110 transition-all duration-300 relative group"
+          >
+            FAQ
+            <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-yellow-400 group-hover:w-full transition-all duration-300"></div>
+          </Link>
+          <span className="text-gray-600 animate-pulse">|</span>
+          <Link
             to="/privacy-policy"
             className="hover:text-white hover:scale-110 transition-all duration-300 relative group"
           >

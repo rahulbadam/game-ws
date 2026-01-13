@@ -1,11 +1,15 @@
 import { saveScore, getTopScores } from "../services/leaderboard";
 import { updateGlobalScore, getGlobalScore } from "../services/globalScore";
 import { useState, useEffect, lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import Footer from "../components/Footer";
 import { Helmet } from "react-helmet-async";
+import Leaderboard from "../components/Leaderboard";
 
-// Lazy load all game components
+import { useAuth } from "../login/AuthContext";
+import { getUserProfile } from "../login/userService";
+
+// Lazy loaded games
 const SnakeGame = lazy(() => import("../games/Snake/SnakeGame"));
 const TicTacToe = lazy(() => import("../games/TicTacToe/TicTacToe"));
 const RockPaperScissors = lazy(() => import("../games/RockPaperScissors/RockPaperScissors"));
@@ -13,151 +17,157 @@ const MemoryMatch = lazy(() => import("../games/MemoryMatch/MemoryMatch"));
 const WhackAMole = lazy(() => import("../games/WhackAMole/WhackAMole"));
 
 export default function PlayGame() {
+  const { gameId } = useParams(); // ✅ correct routing
+  const { user } = useAuth();     // ✅ logged-in or guest user
+
+  const [userProfile, setUserProfile] = useState(null);
+  const [currentUsername, setCurrentUsername] = useState(null);
   const [gameOverScore, setGameOverScore] = useState(null);
   const [scores, setScores] = useState([]);
-  const [gameKey, setGameKey] = useState(0); // Force re-render of game component
+  const [gameKey, setGameKey] = useState(0);
   const [globalScore, setGlobalScore] = useState(0);
 
+  // Load global score
   useEffect(() => {
     setGlobalScore(getGlobalScore());
   }, []);
 
-  const handleGameOver = async (game, score) => {
+  // Load user profile and set consistent username
+  useEffect(() => {
+    if (!user) {
+      setUserProfile(null);
+      // Load username from localStorage for anonymous users
+      const savedUsername = localStorage.getItem('gamews_username');
+      setCurrentUsername(savedUsername || null);
+      return;
+    }
+
+    getUserProfile(user.uid).then(profile => {
+      setUserProfile(profile);
+      // Set consistent username for this session
+      const username = profile?.username || (user.isAnonymous ? "Guest" : "Player");
+      setCurrentUsername(username);
+      // Save to localStorage for consistency
+      localStorage.setItem('gamews_username', username);
+      console.log("User profile loaded:", profile, "Username:", username);
+    }).catch(error => {
+      console.error("Failed to load user profile:", error);
+      setUserProfile(null);
+      // Still set a username for anonymous users
+      const username = user.isAnonymous ? "Guest" : "Player";
+      setCurrentUsername(username);
+      localStorage.setItem('gamews_username', username);
+    });
+  }, [user]);
+
+  const handleGameOver = async (score) => {
     setGameOverScore(score);
-    // Update global score
+
     const newGlobalScore = updateGlobalScore(score);
     setGlobalScore(newGlobalScore);
 
-    await saveScore(game, "Guest", score);
-    const topScores = await getTopScores(game);
-    setScores(topScores);
+    // Use consistent username for this session
+    const username = currentUsername || (user?.isAnonymous ? "Guest" : "Player");
+
+    try {
+      console.log("Saving score:", { gameId, userId: user?.uid, username, score });
+      await saveScore(gameId, user?.uid || "anonymous", username, score);
+      console.log("Score saved successfully");
+    } catch (error) {
+      console.error("Failed to save score:", error);
+    }
+
+    try {
+      const topScores = await getTopScores(gameId);
+      console.log("Top scores fetched:", topScores);
+      setScores(topScores);
+    } catch (error) {
+      console.error("Failed to fetch top scores:", error);
+    }
   };
 
   const playAgain = () => {
     setGameOverScore(null);
     setScores([]);
-    setGameKey(prev => prev + 1); // Force game component to reset
+    setGameKey(prev => prev + 1);
   };
 
   const renderGame = () => {
-    let gameId = window.location.pathname.split("/").pop();
     switch (gameId) {
       case "snake":
-        return (
-          <SnakeGame
-            key={gameKey}
-            onGameOver={(score) => handleGameOver("snake", score)}
-          />
-        );
-
+        return <SnakeGame key={gameKey} onGameOver={handleGameOver} />;
       case "tic-tac-toe":
-        return (
-          <TicTacToe
-            key={gameKey}
-            onGameOver={(score) => handleGameOver("tic-tac-toe", score)}
-          />
-        );
-
+        return <TicTacToe key={gameKey} onGameOver={handleGameOver} />;
       case "rock-paper-scissors":
-        return (
-          <RockPaperScissors
-            key={gameKey}
-            onGameOver={(score) => handleGameOver("rock-paper-scissors", score)}
-          />
-        );
-
+        return <RockPaperScissors key={gameKey} onGameOver={handleGameOver} />;
       case "memory-match":
-        return (
-          <MemoryMatch
-            key={gameKey}
-            onGameOver={(score) => handleGameOver("memory-match", score)}
-          />
-        );
-
+        return <MemoryMatch key={gameKey} onGameOver={handleGameOver} />;
       case "whack-a-mole":
-        return (
-          <WhackAMole
-            key={gameKey}
-            onGameOver={(score) => handleGameOver("whack-a-mole", score)}
-          />
-        );
-
+        return <WhackAMole key={gameKey} onGameOver={handleGameOver} />;
       default:
-        return null;
+        return <p>Game not found</p>;
     }
   };
-
 
   return (
     <>
       <Helmet>
-        <title>Play Game</title>
+        <title>Play {gameId?.replace("-", " ")} | GameWS</title>
       </Helmet>
 
       <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center relative">
-        {/* Back Button - Fixed Position */}
+
+        {/* Back Button */}
         <Link
           to="/"
-          className="fixed top-4 left-4 z-50 bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-full shadow-lg transition-all duration-300 hover:scale-110 animate-fade-in"
-          title="Back to Home"
+          className="fixed top-4 left-4 z-50 bg-gray-800 hover:bg-gray-700 p-3 rounded-full"
         >
-          <svg
-            className="w-6 h-6"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
+          ←
         </Link>
 
         {gameOverScore === null ? (
-          <Suspense fallback={
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
-              <p className="text-gray-400 animate-pulse">Loading game...</p>
-            </div>
-          }>
+          <Suspense
+            fallback={
+              <div className="flex flex-col items-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-400"></div>
+                <p className="text-gray-400 mt-2">Loading game...</p>
+              </div>
+            }
+          >
             {renderGame()}
           </Suspense>
         ) : (
-          <div className="bg-gray-900 p-4 md:p-6 rounded-xl w-full max-w-sm mx-auto animate-fade-in">
-            <h2 className="text-lg md:text-xl mb-2">Game Over</h2>
-            <div className="mb-3">
-              {gameOverScore > 0 && <p className="text-green-400 font-bold text-lg">🎉 You Won!</p>}
-              {gameOverScore < 0 && <p className="text-red-400 font-bold text-lg">😞 You Lose!</p>}
-              {gameOverScore === 0 && <p className="text-yellow-400 font-bold text-lg">🤝 Draw!</p>}
-            </div>
-            <p className="mb-1 text-sm md:text-base">Game Score: {gameOverScore}</p>
-            <p className="mb-2 text-sm md:text-base font-bold text-yellow-400">🏆 Total Score: {globalScore}</p>
+          <div className="bg-gray-900 p-6 rounded-xl w-full max-w-sm mx-auto">
+            <h2 className="text-xl mb-2">Game Over</h2>
 
-            <h3 className="font-bold mb-2 text-sm md:text-base">🏆 Leaderboard</h3>
+            <p className="mb-2 text-green-400 font-bold">
+              Score: {gameOverScore}
+            </p>
+
+            <p className="mb-2 text-yellow-400 font-bold">
+              Total Score: {globalScore}
+            </p>
+
+            <h3 className="font-bold mt-4 mb-2">🏆 Leaderboard</h3>
             {scores.map((s, i) => (
-              <div key={i} className="flex justify-between text-xs md:text-sm">
-                <span>{s.player}</span>
+              <div key={i} className="flex justify-between text-sm">
+                <span>{s.username}</span>
                 <span>{s.score}</span>
               </div>
             ))}
 
             <button
               onClick={playAgain}
-              className="mt-4 w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-3 px-4 rounded-lg transform transition-all duration-500 hover:scale-110 hover:shadow-xl hover:shadow-green-500/50 animate-bounce-gentle relative overflow-hidden group"
+              className="mt-4 w-full bg-green-600 py-2 rounded"
             >
-              {/* Shimmer effect */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 animate-shimmer"></div>
-              <span className="relative z-10 flex items-center justify-center space-x-2">
-                <span className="animate-spin-once">🔄</span>
-                <span>Play Again</span>
-              </span>
+              Play Again
             </button>
           </div>
         )}
+
+        {/* ✅ Dynamic leaderboard */}
+        <Leaderboard gameId={gameId} />
+
         <Footer />
       </div>
     </>
