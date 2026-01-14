@@ -46,7 +46,11 @@ export default function Connect4Game({ onGameOver }) {
 
   // Generate room ID and join/create game
   const joinGame = useCallback(async () => {
-    if (!user) return;
+    console.log('Joining game, user:', user);
+
+    // For demo purposes, allow playing without authentication
+    const playerId = user?.uid || `guest_${Date.now()}_${Math.random()}`;
+    const playerName = user?.displayName || user?.email?.split('@')[0] || `Player_${Math.floor(Math.random() * 1000)}`;
 
     // Use a fixed demo room ID so multiple players can join the same game
     const gameRoomId = 'connect4_demo_room';
@@ -55,9 +59,11 @@ export default function Connect4Game({ onGameOver }) {
     const gameRef = doc(db, 'connect4_games', gameRoomId);
 
     try {
+      console.log('Checking if game exists...');
       const gameSnap = await getDoc(gameRef);
 
       if (!gameSnap.exists()) {
+        console.log('Creating new game as player 1');
         // Create new game as player 1
         await setDoc(gameRef, {
           board: Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)),
@@ -65,7 +71,7 @@ export default function Connect4Game({ onGameOver }) {
           gameStatus: 'waiting',
           winner: null,
           players: {
-            player1: { uid: user.uid, displayName: user.displayName || 'Player 1' },
+            player1: { uid: playerId, displayName: playerName },
             player2: null
           },
           createdAt: new Date(),
@@ -73,15 +79,18 @@ export default function Connect4Game({ onGameOver }) {
         });
         setPlayerRole('player1');
         setGameStatus('waiting');
+        console.log('Game created, waiting for opponent');
       } else {
         const gameData = gameSnap.data();
+        console.log('Game exists, data:', gameData);
 
-        if (!gameData.players.player2 && gameData.players.player1.uid !== user.uid) {
+        if (!gameData.players.player2 && gameData.players.player1.uid !== playerId) {
+          console.log('Joining as player 2');
           // Join as player 2
           await updateDoc(gameRef, {
             players: {
               ...gameData.players,
-              player2: { uid: user.uid, displayName: user.displayName || 'Player 2' }
+              player2: { uid: playerId, displayName: playerName }
             },
             gameStatus: 'playing',
             lastMove: new Date()
@@ -89,20 +98,46 @@ export default function Connect4Game({ onGameOver }) {
           setPlayerRole('player2');
           setGameStatus('playing');
           setOpponent(gameData.players.player1);
-        } else if (gameData.players.player1.uid === user.uid) {
+          console.log('Joined as player 2, game started');
+        } else if (gameData.players.player1.uid === playerId) {
+          console.log('Rejoining as player 1');
           // Rejoining as player 1
           setPlayerRole('player1');
           setOpponent(gameData.players.player2);
           setGameStatus(gameData.gameStatus);
-        } else if (gameData.players.player2?.uid === user.uid) {
+        } else if (gameData.players.player2?.uid === playerId) {
+          console.log('Rejoining as player 2');
           // Rejoining as player 2
           setPlayerRole('player2');
           setOpponent(gameData.players.player1);
           setGameStatus(gameData.gameStatus);
+        } else {
+          console.log('Room full or error, creating new room');
+          // Room is full or some other issue - create a new room for this user
+          const newRoomId = `connect4_demo_${playerId}_${Date.now()}`;
+          setRoomId(newRoomId);
+          await setDoc(doc(db, 'connect4_games', newRoomId), {
+            board: Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)),
+            currentPlayer: PLAYER1,
+            gameStatus: 'waiting',
+            winner: null,
+            players: {
+              player1: { uid: playerId, displayName: playerName },
+              player2: null
+            },
+            createdAt: new Date(),
+            lastMove: new Date()
+          });
+          setPlayerRole('player1');
+          setGameStatus('waiting');
         }
       }
     } catch (error) {
       console.error('Error joining game:', error);
+      // Fallback: create a local game for testing
+      console.log('Creating fallback local game');
+      setPlayerRole('player1');
+      setGameStatus('waiting');
     }
   }, [user]);
 
@@ -143,10 +178,9 @@ export default function Connect4Game({ onGameOver }) {
 
   // Initialize game
   useEffect(() => {
-    if (user) {
-      joinGame();
-    }
-  }, [user, joinGame]);
+    // Always try to join game, even without authentication for demo
+    joinGame();
+  }, [joinGame]);
 
   // Drop disc in column
   const dropDisc = async (col) => {
@@ -244,8 +278,13 @@ export default function Connect4Game({ onGameOver }) {
   };
 
   const getStatusMessage = () => {
+    // If we don't have a player role yet, show connecting message
+    if (!playerRole) {
+      return '🔗 Connecting to game...';
+    }
+
     if (gameStatus === 'waiting') {
-      return playerRole === 'player1' ? 'Waiting for opponent...' : 'Joining game...';
+      return playerRole === 'player1' ? '⏳ Waiting for opponent...' : '🔄 Joining game...';
     }
     if (gameStatus === 'finished') {
       if (winner === (playerRole === 'player1' ? PLAYER1 : PLAYER2)) {
@@ -359,6 +398,7 @@ export default function Connect4Game({ onGameOver }) {
           <div>
             <h4 className="text-sm font-semibold text-yellow-400 mb-1">📊 Game Status</h4>
             <ul className="text-xs text-gray-300 space-y-0.5">
+              <li>• <span className="text-cyan-400">"Connecting to game..."</span> - Establishing connection</li>
               <li>• <span className="text-orange-400">"Waiting for opponent..."</span> - Share link to invite someone</li>
               <li>• <span className="text-green-400">"Your turn"</span> - Click a column to make your move</li>
               <li>• <span className="text-blue-400">"Opponent's turn"</span> - Wait for other player</li>
