@@ -232,7 +232,7 @@ export default function PlayGame() {
         {/* Back Button */}
         <Link
           to="/"
-          className="fixed top-4 left-4 z-50 bg-gray-800 hover:bg-gray-700 p-3 rounded-full"
+          className="fixed top-20 left-4 z-50 bg-gray-800 hover:bg-gray-700 p-3 rounded-full md:top-20"
         >
           ←
         </Link>

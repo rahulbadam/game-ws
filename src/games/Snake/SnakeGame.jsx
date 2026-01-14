@@ -11,7 +11,7 @@ export default function SnakeGame({ onGameOver }) {
     const containerRef = useRef(null);
     const [containerWidth, setContainerWidth] = useState(400);
     const [mobileDirection, setMobileDirection] = useState(null);
-    const [gameSpeed, setGameSpeed] = useState(3); // Speed level 1-5, default 3
+    const [gameSpeed, setGameSpeed] = useState(4); // Speed level 1-7, default 4 (medium)
 
     // Function to handle mobile button presses
     const handleMobileDirection = (direction) => {
@@ -71,7 +71,7 @@ export default function SnakeGame({ onGameOver }) {
         let score = 0;
         let scoreText;
         let speedText;
-        let moveInterval = 100 - (gameSpeed - 3) * 20; // Speed 1: 140ms, 2: 120ms, 3: 100ms, 4: 80ms, 5: 60ms
+        let moveInterval = 160 - (gameSpeed - 1) * 20; // Speed 1: 160ms, 2: 140ms, 3: 120ms, 4: 100ms, 5: 80ms, 6: 60ms, 7: 40ms
         let lastMoveTime = 0;
         let direction = "RIGHT";
         let pendingDirection = null;
@@ -501,9 +501,9 @@ export default function SnakeGame({ onGameOver }) {
     }, [containerWidth, GRID, GRID_COUNT, CANVAS_WIDTH, CANVAS_HEIGHT]);
 
     return (
-        <div className="w-full flex flex-col min-h-screen">
+        <div className="w-full flex flex-col">
             {/* Game Container - Full Screen on Mobile */}
-            <div className="flex-1 flex items-center justify-center">
+            <div className="flex items-center justify-center">
                 <div
                     id="game-container"
                     ref={containerRef}
@@ -511,7 +511,6 @@ export default function SnakeGame({ onGameOver }) {
                         width: containerWidth,
                         height: containerHeightPx,
                         maxWidth: "100%",
-                        maxHeight: "calc(100vh - 60px)", // Reduced gap for compact mobile controls
                         margin: "8px auto",
                         boxSizing: "border-box",
                         padding: 4,
@@ -537,7 +536,7 @@ export default function SnakeGame({ onGameOver }) {
                         <span className="text-yellow-400 font-bold text-sm px-2">Speed: {gameSpeed}</span>
                         <button
                             className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded px-2 py-1 text-sm font-bold shadow-md transition-colors ml-1"
-                            onClick={() => setGameSpeed(Math.min(5, gameSpeed + 1))}
+                            onClick={() => setGameSpeed(Math.min(7, gameSpeed + 1))}
                         >
                             +
                         </button>
