@@ -48,8 +48,8 @@ export default function Connect4Game({ onGameOver }) {
   const joinGame = useCallback(async () => {
     if (!user) return;
 
-    // For demo purposes, use a fixed room ID. In production, you'd generate unique IDs
-    const gameRoomId = `connect4_demo_${Date.now()}`;
+    // Use a fixed demo room ID so multiple players can join the same game
+    const gameRoomId = 'connect4_demo_room';
     setRoomId(gameRoomId);
 
     const gameRef = doc(db, 'connect4_games', gameRoomId);
@@ -332,12 +332,39 @@ export default function Connect4Game({ onGameOver }) {
       {/* Instructions */}
       <div className="bg-gray-800 rounded-lg p-4 mt-6 max-w-md mx-auto">
         <h3 className="text-lg font-bold text-blue-400 mb-2">🎯 How to Play</h3>
-        <ul className="text-sm text-gray-300 space-y-1 text-left">
-          <li>• Take turns dropping colored discs into columns</li>
-          <li>• First to get 4 in a row wins (horizontal, vertical, or diagonal)</li>
-          <li>• Red goes first, then Yellow</li>
-          <li>• Click any column to drop your disc</li>
-        </ul>
+        <div className="space-y-3 text-left">
+          {/* Multiplayer Instructions */}
+          <div>
+            <h4 className="text-sm font-semibold text-green-400 mb-1">🔗 Multiplayer Setup</h4>
+            <ul className="text-xs text-gray-300 space-y-0.5">
+              <li>• Game automatically connects you to a shared room</li>
+              <li>• <strong>First player</strong> becomes Red and waits for opponent</li>
+              <li>• <strong>Second player</strong> joins as Yellow and starts the game</li>
+              <li>• Share the game link with friends to play together</li>
+            </ul>
+          </div>
+
+          {/* Gameplay Instructions */}
+          <div>
+            <h4 className="text-sm font-semibold text-blue-400 mb-1">🎮 Game Rules</h4>
+            <ul className="text-xs text-gray-300 space-y-0.5">
+              <li>• Take turns dropping colored discs into columns</li>
+              <li>• First to get 4 in a row wins (horizontal, vertical, or diagonal)</li>
+              <li>• Red goes first, then Yellow alternates</li>
+              <li>• Click any column to drop your disc</li>
+            </ul>
+          </div>
+
+          {/* Status Guide */}
+          <div>
+            <h4 className="text-sm font-semibold text-yellow-400 mb-1">📊 Game Status</h4>
+            <ul className="text-xs text-gray-300 space-y-0.5">
+              <li>• <span className="text-orange-400">"Waiting for opponent..."</span> - Share link to invite someone</li>
+              <li>• <span className="text-green-400">"Your turn"</span> - Click a column to make your move</li>
+              <li>• <span className="text-blue-400">"Opponent's turn"</span> - Wait for other player</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </div>
   );
