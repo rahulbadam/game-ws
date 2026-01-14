@@ -61,5 +61,14 @@ export const games = [
     color: "from-yellow-500 to-orange-600",
     entryFee: 10,
     requiresCoins: true,
+  },
+  {
+    id: "connect-4",
+    name: "Connect 4",
+    description: "Drop discs and connect 4 in a row to win!",
+    thumbnail: "🔴🟡",
+    color: "from-red-500 to-yellow-600",
+    entryFee: 15,
+    requiresCoins: true,
   }
 ];

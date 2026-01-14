@@ -17,6 +17,7 @@ const MemoryMatch = lazy(() => import("../games/MemoryMatch/MemoryMatch"));
 const WhackAMole = lazy(() => import("../games/WhackAMole/WhackAMole"));
 const TowerOfHanoi = lazy(() => import("../games/TowerOfHanoi/TowerOfHanoi"));
 const LightsOut = lazy(() => import("../games/LightsOut/LightsOut"));
+const Connect4Game = lazy(() => import("../games/Connect4/Connect4Game"));
 
 export default function PlayGame() {
   const { gameId } = useParams(); // ✅ correct routing
@@ -213,6 +214,8 @@ export default function PlayGame() {
         return <TowerOfHanoi key={gameKey} onGameOver={handleGameOver} onGameStart={handleGameStart} />;
       case "lights-out":
         return <LightsOut key={gameKey} onGameOver={handleGameOver} onGameStart={handleGameStart} />;
+      case "connect-4":
+        return <Connect4Game key={gameKey} onGameOver={handleGameOver} />;
       default:
         return <p>Game not found</p>;
     }
