@@ -70,31 +70,31 @@ function App() {
       <ScrollToTop />
 
       {/* Fixed Top Navigation Bar */}
-      <nav className="fixed top-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-4 py-3 shadow-lg">
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-gray-900/95 backdrop-blur-sm border-b border-gray-800 px-3 md:px-4 py-2 md:py-3 shadow-lg">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           {/* Mobile: Hamburger Menu | Desktop: Logo/Brand */}
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center space-x-1 md:space-x-2">
             {/* Hamburger Menu - Mobile Only */}
-            <button className="md:hidden p-2 text-white hover:text-gray-300 hover:bg-gray-800 rounded-lg transition-all duration-200">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <button className="md:hidden p-1.5 text-white hover:text-gray-300 hover:bg-gray-800 rounded-md transition-all duration-200">
+              <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
             </button>
 
             {/* Logo/Brand - Desktop */}
-            <Link to="/" className="hidden md:block text-xl font-bold text-green-400 hover:text-green-300 transition-colors">
+            <Link to="/" className="hidden md:block text-lg md:text-xl font-bold text-green-400 hover:text-green-300 transition-colors">
               🎮 GameWS
             </Link>
 
             {/* Mobile Logo */}
-            <Link to="/" className="md:hidden text-lg font-bold text-green-400 hover:text-green-300 transition-colors">
+            <Link to="/" className="md:hidden text-base md:text-lg font-bold text-green-400 hover:text-green-300 transition-colors">
               🎮
             </Link>
           </div>
 
           {/* User Dropdown - Desktop & Mobile */}
           {user && (
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 md:space-x-3">
               {/* Global Score Display - Desktop */}
               <div className="hidden md:flex items-center space-x-2 bg-gray-800 px-3 py-1 rounded-lg">
                 <span className="text-yellow-400 text-sm font-medium">🟡</span>

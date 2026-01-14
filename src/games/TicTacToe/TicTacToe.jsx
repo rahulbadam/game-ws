@@ -6,7 +6,7 @@ const winningCombos = [
   [0, 4, 8], [2, 4, 6]
 ];
 
-export default function TicTacToe({ onGameOver }) {
+export default function TicTacToe({ onGameOver, onGameStart }) {
   const [board, setBoard] = useState(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true); // X = Player, O = AI
   const [winner, setWinner] = useState(null);
@@ -77,6 +77,11 @@ export default function TicTacToe({ onGameOver }) {
   /* ---------- PLAYER CLICK ---------- */
   const handleClick = (index) => {
     if (board[index] || gameOver || !isXNext) return;
+
+    // Call onGameStart for the first move
+    if (playerMovesRef.current.length === 0 && onGameStart) {
+      onGameStart();
+    }
 
     const newBoard = [...board];
 
@@ -192,7 +197,7 @@ export default function TicTacToe({ onGameOver }) {
 
       <div className="mb-4 text-base md:text-lg font-semibold">{status}</div>
 
-      <div className="grid grid-cols-3 gap-2 max-w-xs mx-auto">
+      <div className="grid grid-cols-3 gap-2 md:gap-3 max-w-xs md:max-w-sm mx-auto">
         {board.map((cell, i) => {
           const highlight =
             winner?.combo?.includes(i) ? "bg-green-600" : "";
@@ -200,7 +205,7 @@ export default function TicTacToe({ onGameOver }) {
             <button
               key={i}
               onClick={() => handleClick(i)}
-              className={`w-16 h-16 md:w-20 md:h-20 bg-gray-800 text-2xl md:text-3xl font-bold rounded hover:bg-gray-700 ${highlight}`}
+              className={`w-16 h-16 md:w-20 md:h-20 bg-gray-800 text-2xl md:text-3xl font-bold rounded-lg hover:bg-gray-700 transition-colors ${highlight}`}
             >
               {cell}
             </button>
@@ -208,12 +213,12 @@ export default function TicTacToe({ onGameOver }) {
         })}
       </div>
 
-      <div className="mt-4">
+      <div className="mt-4 md:mt-6">
         <button
           onClick={handleRestart}
-          className="px-3 py-2 md:px-4 md:py-2 bg-blue-600 text-sm md:text-base rounded hover:bg-blue-500"
+          className="px-4 py-2 md:px-6 md:py-3 bg-blue-600 hover:bg-blue-700 text-sm md:text-base rounded-lg font-medium transition-colors"
         >
-          Restart
+          🔄 Restart
         </button>
       </div>
     </div>

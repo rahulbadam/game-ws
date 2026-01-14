@@ -131,11 +131,28 @@ export default function PlayGame() {
       try {
         console.log("Updating global score:", { gameId, userId: user.uid, username, gameResult });
 
-        // Update global score with win/loss penalty system
-        await updateGlobalScore(user.uid, username, {
-          type: gameResult,
-          countAsGame: true // This counts as a game played
-        });
+        // For non-Snake games, handle entry fee logic
+        if (currentGame.id !== 'snake') {
+          if (gameResult === 'win') {
+            // Win: deduct entry fee (already deducted when starting), then add win bonus
+            await updateGlobalScore(user.uid, username, {
+              type: 'win',
+              countAsGame: true
+            });
+          } else {
+            // Loss: entry fee already deducted when starting, no additional penalty
+            await updateGlobalScore(user.uid, username, {
+              type: 'loss',
+              countAsGame: true
+            });
+          }
+        } else {
+          // Snake game: existing logic (entry fee deducted on start, food points awarded)
+          await updateGlobalScore(user.uid, username, {
+            type: gameResult,
+            countAsGame: true
+          });
+        }
 
         console.log("Global score updated successfully");
       } catch (error) {
@@ -153,6 +170,27 @@ export default function PlayGame() {
     }
   };
 
+  // Handle game start - deduct entry fee
+  const handleGameStart = async () => {
+    if (!user || !currentGame) return;
+
+    // Snake handles entry fee separately in the game component
+    if (currentGame.id === 'snake') return;
+
+    // Deduct entry fee when game starts
+    try {
+      const username = currentUsername || (user.isAnonymous ? "Guest" : "Player");
+      await updateGlobalScore(user.uid, username, {
+        type: 'entry_fee',
+        points: -currentGame.entryFee,
+        countAsGame: false
+      });
+      console.log(`Entry fee of ${currentGame.entryFee} coins deducted`);
+    } catch (error) {
+      console.error("Failed to deduct entry fee:", error);
+    }
+  };
+
   const playAgain = () => {
     setGameOverScore(null);
     setScores([]);
@@ -164,17 +202,17 @@ export default function PlayGame() {
       case "snake":
         return <SnakeGame key={gameKey} onGameOver={handleGameOver} />;
       case "tic-tac-toe":
-        return <TicTacToe key={gameKey} onGameOver={handleGameOver} />;
+        return <TicTacToe key={gameKey} onGameOver={handleGameOver} onGameStart={handleGameStart} />;
       case "rock-paper-scissors":
-        return <RockPaperScissors key={gameKey} onGameOver={handleGameOver} />;
+        return <RockPaperScissors key={gameKey} onGameOver={handleGameOver} onGameStart={handleGameStart} />;
       case "memory-match":
-        return <MemoryMatch key={gameKey} onGameOver={handleGameOver} />;
+        return <MemoryMatch key={gameKey} onGameOver={handleGameOver} onGameStart={handleGameStart} />;
       case "whack-a-mole":
-        return <WhackAMole key={gameKey} onGameOver={handleGameOver} />;
+        return <WhackAMole key={gameKey} onGameOver={handleGameOver} onGameStart={handleGameStart} />;
       case "tower-of-hanoi":
-        return <TowerOfHanoi key={gameKey} onGameOver={handleGameOver} />;
+        return <TowerOfHanoi key={gameKey} onGameOver={handleGameOver} onGameStart={handleGameStart} />;
       case "lights-out":
-        return <LightsOut key={gameKey} onGameOver={handleGameOver} />;
+        return <LightsOut key={gameKey} onGameOver={handleGameOver} onGameStart={handleGameStart} />;
       default:
         return <p>Game not found</p>;
     }
@@ -227,26 +265,28 @@ export default function PlayGame() {
             {renderGame()}
           </Suspense>
         ) : (
-          <div className="bg-gray-900 p-6 rounded-xl w-full max-w-sm mx-auto">
-            <h2 className="text-xl mb-2">Game Over</h2>
+          <div className="bg-gray-900 p-4 md:p-6 rounded-xl w-full max-w-sm md:max-w-md mx-auto">
+            <h2 className="text-lg md:text-xl mb-3 md:mb-2">Game Over</h2>
 
-            <p className="mb-4 text-green-400 font-bold">
+            <p className="mb-4 md:mb-6 text-green-400 font-bold text-lg md:text-xl">
               Score: {gameOverScore}
             </p>
 
-            <h3 className="font-bold mt-4 mb-2">🏆 Leaderboard</h3>
-            {scores.map((s, i) => (
-              <div key={i} className="flex justify-between text-sm">
-                <span>{s.username}</span>
-                <span>{s.score}</span>
-              </div>
-            ))}
+            <h3 className="font-bold mt-4 md:mt-6 mb-2 md:mb-3 text-base md:text-lg">🏆 Leaderboard</h3>
+            <div className="space-y-1 md:space-y-2">
+              {scores.slice(0, 5).map((s, i) => (
+                <div key={i} className="flex justify-between text-sm md:text-base bg-gray-800 p-2 rounded">
+                  <span className="truncate mr-2">{s.username}</span>
+                  <span className="font-bold text-yellow-400">{s.score}</span>
+                </div>
+              ))}
+            </div>
 
             <button
               onClick={playAgain}
-              className="mt-4 w-full bg-green-600 py-2 rounded"
+              className="mt-4 md:mt-6 w-full bg-green-600 hover:bg-green-700 py-3 md:py-2 rounded-lg font-medium transition-colors"
             >
-              Play Again
+              🔄 Play Again
             </button>
           </div>
         )}

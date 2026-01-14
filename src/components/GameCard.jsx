@@ -59,40 +59,45 @@ export default function GameCard({ game }) {
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 animate-shimmer transition-opacity duration-300"></div>
       )}
 
-      <div className="relative z-10">
-        <div className="text-3xl md:text-4xl mb-2 md:mb-3">{game.thumbnail}</div>
-        <h2 className={`text-lg md:text-xl font-bold transition-colors duration-300 ${!isDisabled ? 'group-hover:text-white' : 'text-gray-300'
-          }`}>
-          {game.name}
-        </h2>
-        <p className={`text-xs md:text-sm mt-1 transition-opacity duration-300 ${!isDisabled ? 'opacity-80 group-hover:opacity-100' : 'opacity-60'
-          }`}>
-          {game.description}
-        </p>
-
-        {/* Entry Fee Display */}
-        {game.entryFee > 0 && (
-          <div className="mt-2 flex items-center space-x-1">
-            <span className="text-yellow-400 text-sm">💰</span>
-            <span className={`text-xs font-bold ${hasEnoughCoins ? 'text-yellow-300' : 'text-red-400'
-              }`}>
-              Entry: {game.entryFee} coins
-            </span>
-          </div>
-        )}
-
-        {/* Play Button or Insufficient Coins */}
-        <div className="mt-3 md:mt-4 text-xs md:text-sm font-medium transition-all duration-300 inline-block">
+      <div className="relative z-10 h-full">
+        {/* Top right play button - absolutely positioned */}
+        <div className="absolute top-3 right-3 z-20">
           {loading ? (
-            <span className="text-gray-300">Loading...</span>
+            <span className="text-gray-200 bg-gray-800/90 px-2 py-1 rounded text-xs md:text-sm font-medium shadow-lg">
+              Loading...
+            </span>
           ) : hasEnoughCoins ? (
-            <span className={`opacity-90 ${!isDisabled ? 'group-hover:scale-110 transform' : ''}`}>
+            <span className={`text-white bg-black/80 px-3 py-1.5 rounded-lg shadow-lg text-xs md:text-sm font-bold ${!isDisabled ? 'group-hover:scale-110 group-hover:bg-black/90 transform' : ''}`}>
               ▶ Play Now
             </span>
           ) : (
-            <span className="text-red-400 font-bold">
-              🔒 Need {game.entryFee - userScore} more coins
+            <span className="text-red-300 font-bold bg-red-900/90 px-2 py-1 rounded text-xs md:text-sm shadow-lg">
+              🔒 Need {game.entryFee - userScore} more
             </span>
+          )}
+        </div>
+
+        {/* Main content - full width, no padding */}
+        <div>
+          <div className="text-3xl md:text-4xl mb-2 md:mb-3">{game.thumbnail}</div>
+          <h2 className={`text-lg md:text-xl font-bold transition-colors duration-300 ${!isDisabled ? 'group-hover:text-white' : 'text-gray-300'
+            }`}>
+            {game.name}
+          </h2>
+          <p className={`text-xs md:text-sm mt-1 transition-opacity duration-300 ${!isDisabled ? 'opacity-80 group-hover:opacity-100' : 'opacity-60'
+            }`}>
+            {game.description}
+          </p>
+
+          {/* Entry Fee Display */}
+          {game.entryFee > 0 && (
+            <div className="mt-2 flex items-center space-x-1">
+              <span className="text-yellow-400 text-sm">💰</span>
+              <span className={`text-xs font-bold ${hasEnoughCoins ? 'text-yellow-300' : 'text-red-400'
+                }`}>
+                Entry: {game.entryFee} coins
+              </span>
+            </div>
           )}
         </div>
       </div>

@@ -39,7 +39,7 @@ const CHOICE_ICONS = {
   Spock: "🖖"
 };
 
-export default function RockPaperScissors({ onGameOver }) {
+export default function RockPaperScissors({ onGameOver, onGameStart }) {
   const [mode, setMode] = useState("easy");
   const [result, setResult] = useState("");
   const [playerChoice, setPlayerChoice] = useState("");
@@ -60,6 +60,11 @@ export default function RockPaperScissors({ onGameOver }) {
   };
 
   const play = (choice) => {
+    // Call onGameStart for the first move
+    if (!playerChoice && onGameStart) {
+      onGameStart();
+    }
+
     const computer = currentMode.choices[Math.floor(Math.random() * currentMode.choices.length)];
     const gameResult = determineWinner(choice, computer);
 
@@ -166,19 +171,19 @@ export default function RockPaperScissors({ onGameOver }) {
 
       {/* Game Choices */}
       <div className="mb-6">
-        <h2 className="text-lg md:text-xl mb-4">Choose Your Move</h2>
-        <div className={`grid gap-3 justify-center ${currentMode.choices.length === 3 ? 'grid-cols-3 max-w-sm' :
-          currentMode.choices.length === 5 ? 'grid-cols-3 max-w-md' : 'grid-cols-4'
+        <h2 className="text-base md:text-lg lg:text-xl mb-3 md:mb-4">Choose Your Move</h2>
+        <div className={`grid gap-2 md:gap-3 justify-center ${currentMode.choices.length === 3 ? 'grid-cols-3 max-w-xs md:max-w-sm' :
+            currentMode.choices.length === 5 ? 'grid-cols-3 max-w-sm md:max-w-md' : 'grid-cols-4'
           }`}>
           {currentMode.choices.map(choice => (
             <button
               key={choice}
               onClick={() => play(choice)}
-              className="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 px-3 py-3 md:px-4 md:py-4 rounded-lg transition-all duration-200 hover:scale-105 flex flex-col items-center space-y-1"
+              className="bg-gray-800 hover:bg-gray-700 active:bg-gray-600 px-2 py-3 md:px-3 md:py-4 rounded-lg transition-all duration-200 hover:scale-105 flex flex-col items-center space-y-1 min-h-[60px] md:min-h-[70px]"
               disabled={result !== ""}
             >
-              <span className="text-2xl">{CHOICE_ICONS[choice]}</span>
-              <span className="text-xs md:text-sm font-medium">{choice}</span>
+              <span className="text-xl md:text-2xl">{CHOICE_ICONS[choice]}</span>
+              <span className="text-xs md:text-sm font-medium leading-tight">{choice}</span>
             </button>
           ))}
         </div>

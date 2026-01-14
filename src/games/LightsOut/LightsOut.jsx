@@ -7,7 +7,7 @@ const DIFFICULTY_LEVELS = {
   hard: { size: 7, name: "Hard", emoji: "🔴" }
 };
 
-export default function LightsOut({ onGameOver }) {
+export default function LightsOut({ onGameOver, onGameStart }) {
   const [difficulty, setDifficulty] = useState("medium");
   const [board, setBoard] = useState([]);
   const [moves, setMoves] = useState(0);
@@ -66,6 +66,11 @@ export default function LightsOut({ onGameOver }) {
   // Handle cell click
   const handleCellClick = (row, col) => {
     if (gameWon) return;
+
+    // Call onGameStart for the first move
+    if (moves === 0 && onGameStart) {
+      onGameStart();
+    }
 
     // Start timer on first move
     if (moves === 0) {
@@ -179,12 +184,12 @@ export default function LightsOut({ onGameOver }) {
       </div>
 
       {/* Game Board */}
-      <div className="flex justify-center mb-6">
+      <div className="flex justify-center mb-4 md:mb-6">
         <div
-          className="grid gap-2 p-4 bg-gray-800 rounded-lg shadow-lg"
+          className="grid gap-1 md:gap-2 p-3 md:p-4 bg-gray-800 rounded-lg shadow-lg"
           style={{
             gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
-            maxWidth: '400px',
+            maxWidth: gridSize <= 3 ? '240px' : gridSize <= 4 ? '300px' : '360px',
             margin: '0 auto'
           }}
         >
@@ -195,7 +200,7 @@ export default function LightsOut({ onGameOver }) {
                 onClick={() => handleCellClick(rowIndex, colIndex)}
                 disabled={gameWon}
                 className={`
-                  w-12 h-12 md:w-14 md:h-14 rounded-lg border-2 transition-all duration-300 transform
+                  w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-md md:rounded-lg border-2 transition-all duration-300 transform
                   ${cell
                     ? 'bg-yellow-400 border-yellow-300 shadow-lg shadow-yellow-400/50 hover:scale-105'
                     : 'bg-gray-700 border-gray-600 hover:bg-gray-600 hover:scale-105'
@@ -206,7 +211,7 @@ export default function LightsOut({ onGameOver }) {
               >
                 {cell && (
                   <div className="w-full h-full rounded-md bg-gradient-to-br from-yellow-200 to-yellow-500 shadow-inner flex items-center justify-center">
-                    <div className="w-6 h-6 md:w-8 md:h-8 bg-gradient-to-br from-white to-yellow-200 rounded-full shadow-lg opacity-80"></div>
+                    <div className="w-4 h-4 md:w-6 md:h-6 lg:w-8 lg:h-8 bg-gradient-to-br from-white to-yellow-200 rounded-full shadow-lg opacity-80"></div>
                   </div>
                 )}
               </button>

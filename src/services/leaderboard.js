@@ -32,6 +32,8 @@ export const updateGlobalScore = async (userId, username, gameResult) => {
       newScore += 10; // +10 for winning
     } else if (gameResult.type === 'loss') {
       newScore -= 10; // -10 for losing
+    } else if (gameResult.type === 'entry_fee') {
+      newScore += gameResult.points || -10; // Deduct entry fee (usually -10)
     } else if (gameResult.type === 'snake_entry') {
       newScore -= 10; // -10 entry fee for snake
     } else if (gameResult.type === 'snake_food') {

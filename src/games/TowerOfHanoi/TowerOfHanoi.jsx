@@ -11,7 +11,7 @@ const ROD_WIDTH = 24;
 const BASE_HEIGHT = 25;
 const DISK_HEIGHT = 28;
 
-export default function TowerOfHanoi({ onGameOver }) {
+export default function TowerOfHanoi({ onGameOver, onGameStart }) {
   const [difficulty, setDifficulty] = useState("easy");
   const [rods, setRods] = useState([]);
   const [selectedRod, setSelectedRod] = useState(null);
@@ -71,6 +71,10 @@ export default function TowerOfHanoi({ onGameOver }) {
 
         // Valid move: empty target rod OR disk is smaller than target top disk
         if (rods[rodIndex].length === 0 || diskToMove < targetTopDisk) {
+          // Call onGameStart for the first move
+          if (moves === 0 && onGameStart) {
+            onGameStart();
+          }
           moveDisk(selectedRod, rodIndex);
         } else {
           // Invalid move - could add visual feedback here
@@ -194,8 +198,8 @@ export default function TowerOfHanoi({ onGameOver }) {
             {/* Rod - Polished metal pole */}
             <div
               className={`absolute bottom-0 left-1/2 transform -translate-x-1/2 bg-gradient-to-b from-slate-300 to-slate-500 border-2 rounded-t-full shadow-lg transition-all duration-300 ${selectedRod === rodIndex
-                  ? 'border-cyan-400 shadow-cyan-400/50 shadow-lg from-cyan-200 to-cyan-400'
-                  : 'border-slate-400 shadow-slate-600/30'
+                ? 'border-cyan-400 shadow-cyan-400/50 shadow-lg from-cyan-200 to-cyan-400'
+                : 'border-slate-400 shadow-slate-600/30'
                 }`}
               style={{ width: ROD_WIDTH, height: ROD_HEIGHT, borderRadius: `${ROD_WIDTH / 2}px ${ROD_WIDTH / 2}px 0 0` }}
             />
@@ -221,8 +225,8 @@ export default function TowerOfHanoi({ onGameOver }) {
                 <div
                   key={`${disk}-${diskIndex}`}
                   className={`absolute left-1/2 transform -translate-x-1/2 border-3 rounded-lg transition-all duration-300 shadow-lg ${selectedRod === rodIndex && diskIndex === rod.length - 1
-                      ? `bg-gradient-to-b ${diskColors[disk - 1]} border-yellow-300 scale-110 shadow-yellow-400/50`
-                      : `bg-gradient-to-b ${diskColors[disk - 1]} border-gray-600 shadow-gray-800/50`
+                    ? `bg-gradient-to-b ${diskColors[disk - 1]} border-yellow-300 scale-110 shadow-yellow-400/50`
+                    : `bg-gradient-to-b ${diskColors[disk - 1]} border-gray-600 shadow-gray-800/50`
                     }`}
                   style={{
                     width: diskWidth,

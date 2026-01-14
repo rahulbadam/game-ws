@@ -26,7 +26,8 @@ export default function SnakeGame({ onGameOver }) {
         if (!el) return;
         function measure() {
             const parentW = el.clientWidth || window.innerWidth;
-            const reservedV = 80;
+            // Reduced reserved space for mobile controls (was 80, now 60)
+            const reservedV = window.innerWidth < 768 ? 60 : 80;
             const maxByHeight = Math.max(200, window.innerHeight - reservedV);
             const maxAllowed = Math.min(800, maxByHeight);
             const w = Math.max(200, Math.min(parentW, maxAllowed));
@@ -502,7 +503,7 @@ export default function SnakeGame({ onGameOver }) {
                         width: containerWidth,
                         height: containerHeightPx,
                         maxWidth: "100%",
-                        maxHeight: "calc(100vh - 120px)", // More space for controls
+                        maxHeight: "calc(100vh - 90px)", // Adjusted for compact mobile controls
                         margin: "8px auto",
                         boxSizing: "border-box",
                         padding: 4,
@@ -514,17 +515,17 @@ export default function SnakeGame({ onGameOver }) {
                 />
             </div>
 
-            {/* Mobile Touch Controls - Bottom of Screen */}
-            <div className="md:hidden bg-gray-900 p-4 border-t border-gray-700">
-                <div className="max-w-sm mx-auto">
-                    {/* Control Buttons Grid */}
-                    <div className="grid grid-cols-3 gap-3 mb-3">
+            {/* Mobile Touch Controls - Compact Bottom Section */}
+            <div className="md:hidden bg-gray-900 p-2 border-t border-gray-700">
+                <div className="max-w-xs mx-auto">
+                    {/* Compact Control Buttons Grid */}
+                    <div className="grid grid-cols-3 gap-1 mb-2">
                         {/* Empty top left */}
                         <div></div>
 
                         {/* Up Button */}
                         <button
-                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg py-3 px-4 text-xl font-bold shadow-lg transition-colors"
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md py-2 px-3 text-lg font-bold shadow-md transition-colors"
                             onTouchStart={(e) => {
                                 e.preventDefault();
                                 window._snakeMobileDirection = "UP";
@@ -538,7 +539,7 @@ export default function SnakeGame({ onGameOver }) {
 
                         {/* Left Button */}
                         <button
-                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg py-3 px-4 text-xl font-bold shadow-lg transition-colors"
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md py-2 px-3 text-lg font-bold shadow-md transition-colors"
                             onTouchStart={(e) => {
                                 e.preventDefault();
                                 window._snakeMobileDirection = "LEFT";
@@ -549,7 +550,7 @@ export default function SnakeGame({ onGameOver }) {
 
                         {/* Down Button */}
                         <button
-                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg py-3 px-4 text-xl font-bold shadow-lg transition-colors"
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md py-2 px-3 text-lg font-bold shadow-md transition-colors"
                             onTouchStart={(e) => {
                                 e.preventDefault();
                                 window._snakeMobileDirection = "DOWN";
@@ -560,7 +561,7 @@ export default function SnakeGame({ onGameOver }) {
 
                         {/* Right Button */}
                         <button
-                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg py-3 px-4 text-xl font-bold shadow-lg transition-colors"
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-md py-2 px-3 text-lg font-bold shadow-md transition-colors"
                             onTouchStart={(e) => {
                                 e.preventDefault();
                                 window._snakeMobileDirection = "RIGHT";
@@ -570,11 +571,11 @@ export default function SnakeGame({ onGameOver }) {
                         </button>
                     </div>
 
-                    {/* Instructions */}
+                    {/* Compact Instructions */}
                     <div className="text-center">
                         <div className="text-xs text-purple-400 font-medium mb-1">📱 Touch Controls</div>
-                        <div className="text-xs text-gray-400">
-                            Tap arrow buttons to move • Press any key to start
+                        <div className="text-xs text-gray-400 leading-tight">
+                            Tap arrows to move • Press any key to start
                         </div>
                     </div>
                 </div>
