@@ -38,6 +38,8 @@ export const updateGlobalScore = async (userId, username, gameResult) => {
       newScore -= 10; // -10 entry fee for snake
     } else if (gameResult.type === 'snake_food') {
       newScore += gameResult.points || 1; // +1 per food eaten
+    } else if (gameResult.type === 'daily_bonus') {
+      newScore += gameResult.points || 50; // +50 for daily login bonus
     }
 
     console.log(`Score change: ${currentScore} → ${newScore} (${gameResult.type})`);

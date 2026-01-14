@@ -11,6 +11,7 @@ export default function SnakeGame({ onGameOver }) {
     const containerRef = useRef(null);
     const [containerWidth, setContainerWidth] = useState(400);
     const [mobileDirection, setMobileDirection] = useState(null);
+    const [gameSpeed, setGameSpeed] = useState(3); // Speed level 1-5, default 3
 
     // Function to handle mobile button presses
     const handleMobileDirection = (direction) => {
@@ -69,7 +70,8 @@ export default function SnakeGame({ onGameOver }) {
         let cursors;
         let score = 0;
         let scoreText;
-        let moveInterval = 110;
+        let speedText;
+        let moveInterval = 100 - (gameSpeed - 3) * 20; // Speed 1: 140ms, 2: 120ms, 3: 100ms, 4: 80ms, 5: 60ms
         let lastMoveTime = 0;
         let direction = "RIGHT";
         let pendingDirection = null;
@@ -175,11 +177,17 @@ export default function SnakeGame({ onGameOver }) {
             // UI bar background
             this.add.rectangle(WIDTH / 2, UI_BAR_HEIGHT / 2, WIDTH - 6, UI_BAR_HEIGHT - 8, 0x121212).setDepth(20).setStrokeStyle(1, 0x2b2b2b);
 
-            scoreText = this.add.text(WIDTH - 12, (UI_BAR_HEIGHT / 2) - 8, "Score: 0", {
+            scoreText = this.add.text(WIDTH - 12, (UI_BAR_HEIGHT / 2) - 8, `Score: 0 (${gameSpeed}×)`, {
                 fontFamily: "Arial",
                 fontSize: Math.max(12, Math.round(14 * (containerWidth / 400))) + "px",
                 color: "#ffffff",
             }).setOrigin(1, 0.5).setDepth(21);
+
+            speedText = this.add.text(12, (UI_BAR_HEIGHT / 2) + 8, `Speed: ${gameSpeed}`, {
+                fontFamily: "Arial",
+                fontSize: Math.max(10, Math.round(12 * (containerWidth / 400))) + "px",
+                color: "#ffd86b",
+            }).setOrigin(0, 0.5).setDepth(21);
 
             restartText = this.add.text(12, (UI_BAR_HEIGHT / 2) - 8, "Restart", {
                 fontFamily: "Arial",
@@ -341,7 +349,7 @@ export default function SnakeGame({ onGameOver }) {
             snake = [];
             snakePos = [];
             score = 0;
-            if (scoreText) scoreText.setText("Score: 0");
+            if (scoreText) scoreText.setText(`Score: 0 (${gameSpeed}×)`);
 
             const startIndex = Math.floor(GRID_COUNT / 2);
             const sx = CELL_OFFSET + startIndex * GRID;
@@ -426,15 +434,15 @@ export default function SnakeGame({ onGameOver }) {
             const ate = food && Math.round(nx) === Math.round(food.x) && Math.round(ny) === Math.round(food.y);
             if (!ate) snakePos.pop();
             else {
-                score += 1;
-                if (scoreText) scoreText.setText("Score: " + score);
+                score += gameSpeed;
+                if (scoreText) scoreText.setText(`Score: ${score} (${gameSpeed}×)`);
 
-                // Award +1 point for eating food
+                // Award points based on speed for eating food
                 if (user) {
                     const username = user.displayName || user.email?.split('@')[0] || 'Player';
                     updateGlobalScore(user.uid, username, {
                         type: 'snake_food',
-                        points: 1,
+                        points: gameSpeed,
                         countAsGame: false // Food eating doesn't count as game completion
                     }).catch(error => {
                         console.error("Failed to award food points:", error);
@@ -503,7 +511,7 @@ export default function SnakeGame({ onGameOver }) {
                         width: containerWidth,
                         height: containerHeightPx,
                         maxWidth: "100%",
-                        maxHeight: "calc(100vh - 90px)", // Adjusted for compact mobile controls
+                        maxHeight: "calc(100vh - 60px)", // Reduced gap for compact mobile controls
                         margin: "8px auto",
                         boxSizing: "border-box",
                         padding: 4,
@@ -516,10 +524,27 @@ export default function SnakeGame({ onGameOver }) {
             </div>
 
             {/* Mobile Touch Controls - Compact Bottom Section */}
-            <div className="md:hidden bg-gray-900 p-2 border-t border-gray-700">
+            <div className="md:hidden bg-gray-900 p-1 border-t border-gray-700">
                 <div className="max-w-xs mx-auto">
+                    {/* Speed Controls */}
+                    <div className="flex items-center justify-center mb-1">
+                        <button
+                            className="bg-red-600 hover:bg-red-700 active:bg-red-800 text-white rounded px-2 py-1 text-sm font-bold shadow-md transition-colors mr-1"
+                            onClick={() => setGameSpeed(Math.max(1, gameSpeed - 1))}
+                        >
+                            -
+                        </button>
+                        <span className="text-yellow-400 font-bold text-sm px-2">Speed: {gameSpeed}</span>
+                        <button
+                            className="bg-green-600 hover:bg-green-700 active:bg-green-800 text-white rounded px-2 py-1 text-sm font-bold shadow-md transition-colors ml-1"
+                            onClick={() => setGameSpeed(Math.min(5, gameSpeed + 1))}
+                        >
+                            +
+                        </button>
+                    </div>
+
                     {/* Compact Control Buttons Grid */}
-                    <div className="grid grid-cols-3 gap-1 mb-2">
+                    <div className="grid grid-cols-3 gap-1 mb-1">
                         {/* Empty top left */}
                         <div></div>
 
@@ -575,7 +600,7 @@ export default function SnakeGame({ onGameOver }) {
                     <div className="text-center">
                         <div className="text-xs text-purple-400 font-medium mb-1">📱 Touch Controls</div>
                         <div className="text-xs text-gray-400 leading-tight">
-                            Tap arrows to move • Press any key to start
+                            Higher speed = more points per food
                         </div>
                     </div>
                 </div>

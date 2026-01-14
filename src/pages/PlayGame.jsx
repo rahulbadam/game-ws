@@ -294,9 +294,6 @@ export default function PlayGame() {
           </div>
         )}
 
-        {/* ✅ Dynamic leaderboard */}
-        <Leaderboard gameId={gameId} />
-
         <Footer />
       </div>
     </>
