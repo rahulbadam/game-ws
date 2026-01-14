@@ -3,6 +3,8 @@ import { createUserProfile } from "./userService";
 import { useNavigate, Link } from "react-router-dom";
 import { useState } from "react";
 import { Helmet } from "react-helmet-async";
+import { updateProfile } from "firebase/auth";
+import { auth } from "./auth";
 
 export default function Signup() {
   const navigate = useNavigate();
@@ -20,6 +22,12 @@ export default function Signup() {
 
     try {
       const cred = await register(email, password);
+
+      // Set displayName in Firebase Auth profile
+      await updateProfile(cred.user, {
+        displayName: username
+      });
+
       await createUserProfile(cred.user.uid, username, false);
       navigate("/");
     } catch (error) {

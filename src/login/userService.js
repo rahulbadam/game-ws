@@ -13,3 +13,10 @@ export async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
   return snap.exists() ? snap.data() : null;
 }
+
+export async function updateUserProfile(uid, profileData) {
+  await setDoc(doc(db, "users", uid), {
+    ...profileData,
+    updatedAt: new Date(),
+  }, { merge: true });
+}

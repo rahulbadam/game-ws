@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   collection,
   query,
-  where,
   orderBy,
   limit,
   onSnapshot,
@@ -13,19 +12,22 @@ export function useLeaderboard(gameId) {
   const [scores, setScores] = useState([]);
 
   useEffect(() => {
+    // Use global leaderboard instead of individual game scores
     const q = query(
-      collection(db, "leaderboard"),
-      where("game", "==", gameId),
+      collection(db, "global_scores"),
       orderBy("score", "desc"),
       limit(10)
     );
 
     const unsubscribe = onSnapshot(q, (snapshot) => {
-      setScores(snapshot.docs.map((doc) => doc.data()));
+      setScores(snapshot.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id
+      })));
     });
 
     return () => unsubscribe();
-  }, [gameId]);
+  }, [gameId]); // Keep gameId dependency for consistency
 
   return scores;
 }

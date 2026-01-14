@@ -44,15 +44,7 @@ export default function Home() {
           </div>
         )}
 
-        {user && (
-          <div className="text-center mb-8 animate-fade-in">
-            <div className="bg-gray-900 rounded-lg p-4 max-w-md mx-auto">
-              <p className="text-green-400 font-semibold">
-                Welcome back, {user.displayName || user.email || "Player"}! 🎮
-              </p>
-            </div>
-          </div>
-        )}
+
 
         <div className="text-center mb-8">
           <h1 className="text-3xl md:text-4xl font-extrabold mb-2">

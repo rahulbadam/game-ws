@@ -5,6 +5,8 @@ export const games = [
     description: "Classic snake game. Eat, grow, survive.",
     thumbnail: "🐍",
     color: "from-green-500 to-emerald-700",
+    entryFee: 10,
+    requiresCoins: false, // Always accessible, even with negative scores
   },
   {
     id: "tic-tac-toe",
@@ -12,6 +14,8 @@ export const games = [
     description: "3x3 strategy battle.",
     thumbnail: "❌⭕",
     color: "from-purple-500 to-indigo-700",
+    entryFee: 10,
+    requiresCoins: true,
   },
   {
     id: "rock-paper-scissors",
@@ -19,6 +23,8 @@ export const games = [
     description: "Beat the computer.",
     thumbnail: "✊✋✌️",
     color: "from-yellow-500 to-orange-600",
+    entryFee: 10,
+    requiresCoins: true,
   },
   {
     id: "memory-match",
@@ -26,6 +32,8 @@ export const games = [
     description: "Test your memory skills.",
     thumbnail: "🧠",
     color: "from-pink-500 to-rose-600",
+    entryFee: 10,
+    requiresCoins: true,
   },
   {
     id: "whack-a-mole",
@@ -33,5 +41,25 @@ export const games = [
     description: "Fast reaction game.",
     thumbnail: "🐹",
     color: "from-blue-500 to-cyan-600",
+    entryFee: 10,
+    requiresCoins: true,
+  },
+  {
+    id: "tower-of-hanoi",
+    name: "Tower of Hanoi",
+    description: "Classic puzzle game. Move disks strategically.",
+    thumbnail: "🗼",
+    color: "from-purple-500 to-pink-600",
+    entryFee: 10,
+    requiresCoins: true,
+  },
+  {
+    id: "lights-out",
+    name: "Lights Out",
+    description: "Turn off all the lights by clicking cells.",
+    thumbnail: "💡",
+    color: "from-yellow-500 to-orange-600",
+    entryFee: 10,
+    requiresCoins: true,
   }
 ];

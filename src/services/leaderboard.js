@@ -12,108 +12,79 @@ import {
   serverTimestamp,
 } from "firebase/firestore";
 
-export const saveScore = async (game, userId, username, score) => {
+// Global score system with penalties and rewards
+export const updateGlobalScore = async (userId, username, gameResult) => {
   try {
-    console.log("Firebase saveScore called with:", { game, userId, username, score });
+    console.log("Updating global score:", { userId, username, gameResult });
 
-    // 🔑 One document per game+user
-    const docId = `${game}_${userId}`;
-    const scoreRef = doc(db, "leaderboard", docId);
-
+    const scoreRef = doc(db, "global_scores", userId);
     const existingSnap = await getDoc(scoreRef);
 
-    if (!existingSnap.exists()) {
-      // First time score
-      await setDoc(scoreRef, {
-        game,
-        userId,
-        username,
-        score,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-      });
-    } else {
-      const existingScore = existingSnap.data().score;
-
-      // Update only if score is higher
-      if (score > existingScore) {
-        await setDoc(
-          scoreRef,
-          {
-            score,
-            username,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true }
-        );
-      } else {
-        console.log("Score not higher, skipping update");
-      }
+    let currentScore = 0;
+    if (existingSnap.exists()) {
+      currentScore = existingSnap.data().score || 0;
     }
 
-    return { id: docId };
+    let newScore = currentScore;
+
+    // Apply scoring logic based on game result
+    if (gameResult.type === 'win') {
+      newScore += 10; // +10 for winning
+    } else if (gameResult.type === 'loss') {
+      newScore -= 10; // -10 for losing
+    } else if (gameResult.type === 'snake_entry') {
+      newScore -= 10; // -10 entry fee for snake
+    } else if (gameResult.type === 'snake_food') {
+      newScore += gameResult.points || 1; // +1 per food eaten
+    }
+
+    console.log(`Score change: ${currentScore} → ${newScore} (${gameResult.type})`);
+
+    // Update or create score document
+    await setDoc(scoreRef, {
+      userId,
+      username,
+      score: newScore,
+      gamesPlayed: (existingSnap.data()?.gamesPlayed || 0) + (gameResult.countAsGame ? 1 : 0),
+      updatedAt: serverTimestamp(),
+      createdAt: existingSnap.data()?.createdAt || serverTimestamp(),
+    }, { merge: true });
+
+    console.log("Global score updated:", newScore);
+    return newScore;
+
   } catch (error) {
-    console.error("Firebase saveScore error:", error);
-
-    // 🔁 Local fallback (unchanged)
-    console.log("Saving locally as fallback");
-    const localScores = JSON.parse(localStorage.getItem("localLeaderboard") || "[]");
-
-    const existingIndex = localScores.findIndex(
-      s => s.game === game && s.userId === userId
-    );
-
-    if (existingIndex === -1) {
-      localScores.push({
-        game,
-        userId,
-        username,
-        score,
-        createdAt: new Date().toISOString(),
-        local: true,
-      });
-    } else if (score > localScores[existingIndex].score) {
-      localScores[existingIndex].score = score;
-      localScores[existingIndex].updatedAt = new Date().toISOString();
-    }
-
-    localStorage.setItem("localLeaderboard", JSON.stringify(localScores));
-    return { id: "local-" + Date.now(), local: true };
+    console.error("Firebase updateGlobalScore error:", error);
+    throw error;
   }
 };
 
-export const getTopScores = async (game) => {
-  try {
-    const q = query(
-      collection(db, "leaderboard"),
-      where("game", "==", game),
-      orderBy("score", "desc"),
-      limit(10)
-    );
+// Get top global scores for leaderboard
+export const getGlobalTopScores = async () => {
+  const q = query(
+    collection(db, "global_scores"),
+    orderBy("score", "desc"),
+    limit(10)
+  );
 
-    const snapshot = await getDocs(q);
-    const firebaseScores = snapshot.docs.map(doc => doc.data());
+  const snapshot = await getDocs(q);
+  const scores = snapshot.docs.map(doc => ({
+    ...doc.data(),
+    id: doc.id
+  }));
 
-    // Get local scores as fallback
-    const localScores = JSON.parse(localStorage.getItem('localLeaderboard') || '[]')
-      .filter(score => score.game === game)
-      .map(score => ({ ...score, local: true }));
+  console.log("Global scores:", scores);
+  return scores;
+};
 
-    // Combine and sort all scores
-    const allScores = [...firebaseScores, ...localScores]
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
+// Get user's current global score
+export const getUserGlobalScore = async (userId) => {
+  const scoreRef = doc(db, "global_scores", userId);
+  const snap = await getDoc(scoreRef);
 
-    console.log("Combined scores:", allScores);
-    return allScores;
-  } catch (error) {
-    console.error("Firebase getTopScores error:", error);
-    // Return local scores only
-    const localScores = JSON.parse(localStorage.getItem('localLeaderboard') || '[]')
-      .filter(score => score.game === game)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10);
-    console.log("Returning local scores:", localScores);
-    return localScores;
+  if (snap.exists()) {
+    return snap.data();
   }
+
+  return { score: 0, gamesPlayed: 0 };
 };

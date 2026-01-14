@@ -1,11 +1,21 @@
 import Phaser from "phaser";
 import { useEffect, useRef, useLayoutEffect, useState } from "react";
+import { updateGlobalScore } from "../../services/leaderboard";
+import { useAuth } from "../../login/AuthContext";
 
 export default function SnakeGame({ onGameOver }) {
     const onGameOverRef = useRef(onGameOver);
+    const { user } = useAuth();
+    const [hasPaidEntryFee, setHasPaidEntryFee] = useState(false);
     const gameRef = useRef(null);
     const containerRef = useRef(null);
     const [containerWidth, setContainerWidth] = useState(400);
+    const [mobileDirection, setMobileDirection] = useState(null);
+
+    // Function to handle mobile button presses
+    const handleMobileDirection = (direction) => {
+        setMobileDirection(direction);
+    };
 
     useEffect(() => {
         onGameOverRef.current = onGameOver;
@@ -197,9 +207,24 @@ export default function SnakeGame({ onGameOver }) {
             }).setOrigin(0.5).setInteractive({ useHandCursor: true }).setDepth(21);
 
             // button handlers
-            startText.on("pointerdown", () => {
+            startText.on("pointerdown", async () => {
                 isRunning = true;
                 updateButtonsVisibility();
+
+                // Deduct entry fee when game starts (only once per game session)
+                if (user && !hasPaidEntryFee) {
+                    setHasPaidEntryFee(true);
+                    try {
+                        const username = user.displayName || user.email?.split('@')[0] || 'Player';
+                        await updateGlobalScore(user.uid, username, {
+                            type: 'snake_entry',
+                            countAsGame: false // This is just an entry fee, not a game completion
+                        });
+                        console.log("Snake entry fee deducted: -10 points");
+                    } catch (error) {
+                        console.error("Failed to deduct entry fee:", error);
+                    }
+                }
             });
             pauseText.on("pointerdown", () => {
                 isRunning = false;
@@ -256,7 +281,39 @@ export default function SnakeGame({ onGameOver }) {
             cursors = this.input.keyboard.createCursorKeys();
 
             let startTouch = null;
-            this.input.on("pointerdown", p => { startTouch = { x: p.x, y: p.y }; });
+            this.input.on("pointerdown", p => {
+                // Check if touch is in control areas (only for mobile-like behavior)
+                const isMobile = window.innerWidth < 768; // md breakpoint
+                if (isMobile) {
+                    const touchX = p.x;
+                    const touchY = p.y;
+
+                    // Left area (25% of width)
+                    if (touchX < WIDTH * 0.25 && direction !== "RIGHT") {
+                        pendingDirection = "LEFT";
+                        return;
+                    }
+                    // Right area (25% of width from right)
+                    else if (touchX > WIDTH * 0.75 && direction !== "LEFT") {
+                        pendingDirection = "RIGHT";
+                        return;
+                    }
+                    // Top area (25% of height from top, center 50%)
+                    else if (touchY < HEIGHT * 0.25 && touchX > WIDTH * 0.25 && touchX < WIDTH * 0.75 && direction !== "DOWN") {
+                        pendingDirection = "UP";
+                        return;
+                    }
+                    // Bottom area (25% of height from bottom, center 50%)
+                    else if (touchY > HEIGHT * 0.75 && touchX > WIDTH * 0.25 && touchX < WIDTH * 0.75 && direction !== "UP") {
+                        pendingDirection = "DOWN";
+                        return;
+                    }
+                }
+
+                // Fallback to swipe gesture
+                startTouch = { x: p.x, y: p.y };
+            });
+
             this.input.on("pointerup", p => {
                 if (!startTouch) return;
                 const dx = p.x - startTouch.x;
@@ -305,13 +362,36 @@ export default function SnakeGame({ onGameOver }) {
         function update(time) {
             if (!this || !this.game) return;
 
+            // Check for direction keys to start game
+            const leftPressed = Phaser.Input.Keyboard.JustDown(cursors.left);
+            const rightPressed = Phaser.Input.Keyboard.JustDown(cursors.right);
+            const upPressed = Phaser.Input.Keyboard.JustDown(cursors.up);
+            const downPressed = Phaser.Input.Keyboard.JustDown(cursors.down);
+
+            // Check for mobile button input (from React state)
+            const mobileDir = window._snakeMobileDirection;
+            if (mobileDir) {
+                if (mobileDir === "LEFT" && direction !== "RIGHT") pendingDirection = "LEFT";
+                if (mobileDir === "RIGHT" && direction !== "LEFT") pendingDirection = "RIGHT";
+                if (mobileDir === "UP" && direction !== "DOWN") pendingDirection = "UP";
+                if (mobileDir === "DOWN" && direction !== "UP") pendingDirection = "DOWN";
+                // Clear the mobile direction after processing
+                window._snakeMobileDirection = null;
+            }
+
+            // Start game if any direction key pressed and not running
+            if (!isRunning && (leftPressed || rightPressed || upPressed || downPressed || mobileDir)) {
+                isRunning = true;
+                updateButtonsVisibility();
+            }
+
             // ignore movement updates when not running
             if (!isRunning) return;
 
-            if (Phaser.Input.Keyboard.JustDown(cursors.left) && direction !== "RIGHT") pendingDirection = "LEFT";
-            if (Phaser.Input.Keyboard.JustDown(cursors.right) && direction !== "LEFT") pendingDirection = "RIGHT";
-            if (Phaser.Input.Keyboard.JustDown(cursors.up) && direction !== "DOWN") pendingDirection = "UP";
-            if (Phaser.Input.Keyboard.JustDown(cursors.down) && direction !== "UP") pendingDirection = "DOWN";
+            if (leftPressed && direction !== "RIGHT") pendingDirection = "LEFT";
+            if (rightPressed && direction !== "LEFT") pendingDirection = "RIGHT";
+            if (upPressed && direction !== "DOWN") pendingDirection = "UP";
+            if (downPressed && direction !== "UP") pendingDirection = "DOWN";
 
             if (time < lastMoveTime + moveInterval) return;
             lastMoveTime = time;
@@ -336,7 +416,7 @@ export default function SnakeGame({ onGameOver }) {
             if (nx < leftBound || ny < topBound || nx > rightBound || ny > bottomBound) {
                 try { game.destroy(true); } catch (e) { }
                 window._phaserGame = null;
-                onGameOverRef.current?.(-10); // -10 for hitting wall
+                onGameOverRef.current?.({ type: 'loss', score }); // Loss for hitting wall
                 return;
             }
 
@@ -347,6 +427,18 @@ export default function SnakeGame({ onGameOver }) {
             else {
                 score += 1;
                 if (scoreText) scoreText.setText("Score: " + score);
+
+                // Award +1 point for eating food
+                if (user) {
+                    const username = user.displayName || user.email?.split('@')[0] || 'Player';
+                    updateGlobalScore(user.uid, username, {
+                        type: 'snake_food',
+                        points: 1,
+                        countAsGame: false // Food eating doesn't count as game completion
+                    }).catch(error => {
+                        console.error("Failed to award food points:", error);
+                    });
+                }
             }
 
             for (let i = 0; i < snakePos.length; i++) {
@@ -384,7 +476,7 @@ export default function SnakeGame({ onGameOver }) {
                 if (snakePos[i].x === snakePos[0].x && snakePos[i].y === snakePos[0].y) {
                     try { game.destroy(true); } catch (e) { }
                     window._phaserGame = null;
-                    onGameOverRef.current?.(-10); // -10 for self collision
+                    onGameOverRef.current?.({ type: 'loss', score }); // Loss for self collision
                     return;
                 }
             }
@@ -400,37 +492,106 @@ export default function SnakeGame({ onGameOver }) {
     }, [containerWidth, GRID, GRID_COUNT, CANVAS_WIDTH, CANVAS_HEIGHT]);
 
     return (
-        <div className="w-full">
-            {/* Instructions */}
-            <div className="bg-gray-800 rounded-lg p-4 mb-4 text-center">
-                <h3 className="text-lg font-bold text-green-400 mb-2">🐍 Snake Game – How to Play</h3>
-                <ul className="text-sm text-gray-300 space-y-1 text-left max-w-md mx-auto">
-                    <li>• Use arrow keys (or swipe on mobile) to control the snake</li>
-                    <li>• Eat the food to grow longer and score points</li>
-                    <li>• Avoid hitting the walls or the snake's own body</li>
-                </ul>
-                <p className="text-xs text-gray-400 mt-2 italic">
-                    Snake is a classic arcade game that improves focus and reaction speed.
-                </p>
+        <div className="w-full flex flex-col min-h-screen">
+            {/* Game Container - Full Screen on Mobile */}
+            <div className="flex-1 flex items-center justify-center">
+                <div
+                    id="game-container"
+                    ref={containerRef}
+                    style={{
+                        width: containerWidth,
+                        height: containerHeightPx,
+                        maxWidth: "100%",
+                        maxHeight: "calc(100vh - 120px)", // More space for controls
+                        margin: "8px auto",
+                        boxSizing: "border-box",
+                        padding: 4,
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        overflow: "hidden",
+                    }}
+                />
             </div>
 
-            <div
-                id="game-container"
-                ref={containerRef}
-                style={{
-                    width: containerWidth,
-                    height: containerHeightPx,
-                    maxWidth: "100%",
-                    maxHeight: "calc(100vh - 40px)",
-                    margin: "8px auto",
-                    boxSizing: "border-box",
-                    padding: 4,
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    overflow: "hidden",
-                }}
-            />
+            {/* Mobile Touch Controls - Bottom of Screen */}
+            <div className="md:hidden bg-gray-900 p-4 border-t border-gray-700">
+                <div className="max-w-sm mx-auto">
+                    {/* Control Buttons Grid */}
+                    <div className="grid grid-cols-3 gap-3 mb-3">
+                        {/* Empty top left */}
+                        <div></div>
+
+                        {/* Up Button */}
+                        <button
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg py-3 px-4 text-xl font-bold shadow-lg transition-colors"
+                            onTouchStart={(e) => {
+                                e.preventDefault();
+                                window._snakeMobileDirection = "UP";
+                            }}
+                        >
+                            ↑
+                        </button>
+
+                        {/* Empty top right */}
+                        <div></div>
+
+                        {/* Left Button */}
+                        <button
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg py-3 px-4 text-xl font-bold shadow-lg transition-colors"
+                            onTouchStart={(e) => {
+                                e.preventDefault();
+                                window._snakeMobileDirection = "LEFT";
+                            }}
+                        >
+                            ←
+                        </button>
+
+                        {/* Down Button */}
+                        <button
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg py-3 px-4 text-xl font-bold shadow-lg transition-colors"
+                            onTouchStart={(e) => {
+                                e.preventDefault();
+                                window._snakeMobileDirection = "DOWN";
+                            }}
+                        >
+                            ↓
+                        </button>
+
+                        {/* Right Button */}
+                        <button
+                            className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white rounded-lg py-3 px-4 text-xl font-bold shadow-lg transition-colors"
+                            onTouchStart={(e) => {
+                                e.preventDefault();
+                                window._snakeMobileDirection = "RIGHT";
+                            }}
+                        >
+                            →
+                        </button>
+                    </div>
+
+                    {/* Instructions */}
+                    <div className="text-center">
+                        <div className="text-xs text-purple-400 font-medium mb-1">📱 Touch Controls</div>
+                        <div className="text-xs text-gray-400">
+                            Tap arrow buttons to move • Press any key to start
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Desktop Instructions - Bottom */}
+            <div className="hidden md:block mt-4 px-4 pb-4">
+                <div className="bg-gray-800 rounded-lg p-3 text-center max-w-md mx-auto">
+                    <h3 className="text-sm font-bold text-green-400 mb-1">🐍 Snake Game</h3>
+                    <p className="text-xs text-gray-300 mb-2">
+                        Eat food, grow longer, avoid walls & yourself!
+                    </p>
+                    <div className="text-xs font-medium text-blue-400">
+                        🎮 Use <kbd className="bg-gray-700 px-1 rounded mx-1">↑↓←→</kbd> arrow keys • Press any key to start
+                    </div>
+                </div>
+            </div>
         </div>
     );
 }
