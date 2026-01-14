@@ -1,58 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../../login/AuthContext";
-
-// Simple local multiplayer for demo (works across browser tabs)
-const useLocalMultiplayer = () => {
-  const [gameData, setGameData] = useState(null);
-  const [playerId] = useState(() => `player_${Date.now()}_${Math.random()}`);
-
-  // Load game from localStorage
-  const loadGame = useCallback(() => {
-    try {
-      const stored = localStorage.getItem('connect4_demo_game');
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  // Save game to localStorage
-  const saveGame = useCallback((data) => {
-    try {
-      localStorage.setItem('connect4_demo_game', JSON.stringify(data));
-      setGameData(data);
-      // Trigger storage event for other tabs
-      window.dispatchEvent(new StorageEvent('storage', {
-        key: 'connect4_demo_game',
-        newValue: JSON.stringify(data)
-      }));
-    } catch (error) {
-      console.error('Failed to save game:', error);
-    }
-  }, []);
-
-  // Listen for storage changes (other tabs)
-  useEffect(() => {
-    const handleStorageChange = (e) => {
-      if (e.key === 'connect4_demo_game' && e.newValue) {
-        try {
-          const data = JSON.parse(e.newValue);
-          setGameData(data);
-        } catch (error) {
-          console.error('Failed to parse game data:', error);
-        }
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    // Load initial game
-    setGameData(loadGame());
-
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, [loadGame]);
-
-  return { gameData, saveGame, playerId };
-};
+import { doc, setDoc, onSnapshot, updateDoc, getDoc } from "firebase/firestore";
+import { db } from "../../firebase";
 
 const ROWS = 6;
 const COLS = 7;
@@ -85,74 +34,160 @@ const Cell = ({ value, onClick, isHovered }) => (
 
 export default function Connect4Game({ onGameOver }) {
   const { user } = useAuth();
-  const { gameData, saveGame, playerId } = useLocalMultiplayer();
 
-  // Derive state from gameData
-  const board = gameData?.board || Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY));
-  const currentPlayer = gameData?.currentPlayer || PLAYER1;
-  const gameStatus = gameData?.gameStatus || 'waiting';
-  const winner = gameData?.winner || null;
-  const playerRole = gameData?.players?.player1?.uid === playerId ? 'player1' :
-    gameData?.players?.player2?.uid === playerId ? 'player2' : null;
-  const opponent = playerRole === 'player1' ? gameData?.players?.player2 :
-    playerRole === 'player2' ? gameData?.players?.player1 : null;
-  const isMyTurn = playerRole && currentPlayer === (playerRole === 'player1' ? PLAYER1 : PLAYER2) && gameStatus === 'playing';
-
+  // Game state
+  const [board, setBoard] = useState(Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)));
+  const [currentPlayer, setCurrentPlayer] = useState(PLAYER1);
+  const [gameStatus, setGameStatus] = useState('connecting'); // connecting, waiting, playing, finished
+  const [winner, setWinner] = useState(null);
+  const [roomId, setRoomId] = useState('connect4_global_room');
+  const [playerRole, setPlayerRole] = useState(null); // player1 or player2
+  const [opponent, setOpponent] = useState(null);
+  const [isMyTurn, setIsMyTurn] = useState(false);
   const [hoveredColumn, setHoveredColumn] = useState(null);
 
-  // Join/create game using local multiplayer
-  const joinGame = useCallback(() => {
-    console.log('Joining game with local multiplayer');
+  // Generate unique player ID (works with or without auth)
+  const playerId = user?.uid || `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  const playerName = user?.displayName || user?.email?.split('@')[0] || `Player_${Math.floor(Math.random() * 1000)}`;
 
-    const playerName = user?.displayName || user?.email?.split('@')[0] || `Player_${Math.floor(Math.random() * 1000)}`;
+  // Join/create game
+  const joinGame = useCallback(async () => {
+    if (!roomId) return;
 
-    if (!gameData) {
-      // No game exists, create one as player 1
-      console.log('Creating new game as player 1');
-      const newGameData = {
-        board: Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)),
-        currentPlayer: PLAYER1,
-        gameStatus: 'waiting',
-        winner: null,
-        players: {
-          player1: { uid: playerId, displayName: playerName },
-          player2: null
-        },
-        createdAt: new Date(),
-        lastMove: new Date()
-      };
-      saveGame(newGameData);
-      console.log('Game created, waiting for opponent');
-    } else if (!gameData.players.player2 && gameData.players.player1.uid !== playerId) {
-      // Game exists but no player 2, join as player 2
-      console.log('Joining as player 2');
-      const updatedGameData = {
-        ...gameData,
-        players: {
-          ...gameData.players,
-          player2: { uid: playerId, displayName: playerName }
-        },
-        gameStatus: 'playing',
-        lastMove: new Date()
-      };
-      saveGame(updatedGameData);
-      console.log('Joined as player 2, game started');
-    } else {
-      // Game exists and we're already a player, or room is full
-      console.log('Already in game or room full');
+    console.log('Joining Connect 4 game...');
+    setGameStatus('connecting');
+
+    try {
+      const gameRef = doc(db, 'connect4_games', roomId);
+      const gameSnap = await getDoc(gameRef);
+
+      if (!gameSnap.exists()) {
+        // Create new game as player 1
+        console.log('Creating new game as player 1');
+        await setDoc(gameRef, {
+          board: Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)),
+          currentPlayer: PLAYER1,
+          gameStatus: 'waiting',
+          winner: null,
+          players: {
+            player1: { uid: playerId, displayName: playerName },
+            player2: null
+          },
+          createdAt: new Date(),
+          lastMove: new Date()
+        });
+        setPlayerRole('player1');
+        setGameStatus('waiting');
+        console.log('Game created, waiting for opponent');
+      } else {
+        const gameData = gameSnap.data();
+        console.log('Game exists:', gameData);
+
+        // Check if we can join as player 2
+        if (!gameData.players.player2 && gameData.players.player1.uid !== playerId) {
+          console.log('Joining as player 2');
+          await updateDoc(gameRef, {
+            players: {
+              ...gameData.players,
+              player2: { uid: playerId, displayName: playerName }
+            },
+            gameStatus: 'playing',
+            lastMove: new Date()
+          });
+          setPlayerRole('player2');
+          setOpponent(gameData.players.player1);
+          console.log('Successfully joined as player 2');
+        } else if (gameData.players.player1.uid === playerId) {
+          console.log('Rejoining as player 1');
+          setPlayerRole('player1');
+          setOpponent(gameData.players.player2);
+          setGameStatus(gameData.gameStatus);
+        } else if (gameData.players.player2?.uid === playerId) {
+          console.log('Rejoining as player 2');
+          setPlayerRole('player2');
+          setOpponent(gameData.players.player1);
+          setGameStatus(gameData.gameStatus);
+        } else {
+          // Room is full, create a new room
+          console.log('Room full, creating new room');
+          const newRoomId = `connect4_room_${Date.now()}`;
+          setRoomId(newRoomId);
+          const newGameRef = doc(db, 'connect4_games', newRoomId);
+          await setDoc(newGameRef, {
+            board: Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)),
+            currentPlayer: PLAYER1,
+            gameStatus: 'waiting',
+            winner: null,
+            players: {
+              player1: { uid: playerId, displayName: playerName },
+              player2: null
+            },
+            createdAt: new Date(),
+            lastMove: new Date()
+          });
+          setPlayerRole('player1');
+          setGameStatus('waiting');
+        }
+      }
+    } catch (error) {
+      console.error('Error joining game:', error);
+      setGameStatus('waiting');
     }
-  }, [user, gameData, saveGame, playerId]);
+  }, [roomId, playerId, playerName]);
 
+  // Set up real-time listener
+  useEffect(() => {
+    if (!roomId) return;
 
+    console.log('Setting up real-time listener for room:', roomId);
+    const gameRef = doc(db, 'connect4_games', roomId);
+
+    const unsubscribe = onSnapshot(gameRef, (doc) => {
+      if (doc.exists()) {
+        const gameData = doc.data();
+        console.log('Received game update:', gameData);
+
+        setBoard(gameData.board || Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)));
+        setCurrentPlayer(gameData.currentPlayer || PLAYER1);
+        setGameStatus(gameData.gameStatus || 'waiting');
+        setWinner(gameData.winner || null);
+
+        // Update opponent info
+        if (playerRole === 'player1' && gameData.players.player2) {
+          setOpponent(gameData.players.player2);
+        } else if (playerRole === 'player2' && gameData.players.player1) {
+          setOpponent(gameData.players.player1);
+        }
+
+        // Check if it's my turn
+        const myColor = playerRole === 'player1' ? PLAYER1 : PLAYER2;
+        setIsMyTurn(gameData.currentPlayer === myColor && gameData.gameStatus === 'playing');
+
+        // Handle game end
+        if (gameData.gameStatus === 'finished' && gameData.winner) {
+          const score = gameData.winner === myColor ? 20 : -10;
+          onGameOver(score);
+        }
+      } else {
+        console.log('Game document does not exist');
+      }
+    }, (error) => {
+      console.error('Snapshot error:', error);
+    });
+
+    return () => {
+      console.log('Unsubscribing from game listener');
+      unsubscribe();
+    };
+  }, [roomId, playerRole, onGameOver]);
 
   // Initialize game
   useEffect(() => {
-    // Always try to join game, even without authentication for demo
     joinGame();
   }, [joinGame]);
 
   // Drop disc in column
-  const dropDisc = (col) => {
+  const dropDisc = async (col) => {
     if (!isMyTurn || gameStatus !== 'playing') return;
 
     const newBoard = board.map(row => [...row]);
@@ -169,21 +204,18 @@ export default function Connect4Game({ onGameOver }) {
     const gameWinner = checkWinner(newBoard);
     const nextPlayer = currentPlayer === PLAYER1 ? PLAYER2 : PLAYER1;
 
-    const updatedGameData = {
-      ...gameData,
-      board: newBoard,
-      currentPlayer: gameWinner ? currentPlayer : nextPlayer,
-      gameStatus: gameWinner ? 'finished' : 'playing',
-      winner: gameWinner,
-      lastMove: new Date()
-    };
-
-    saveGame(updatedGameData);
-
-    // Handle game end
-    if (gameWinner) {
-      const score = gameWinner === (playerRole === 'player1' ? PLAYER1 : PLAYER2) ? 20 : -10;
-      onGameOver(score);
+    try {
+      const gameRef = doc(db, 'connect4_games', roomId);
+      await updateDoc(gameRef, {
+        board: newBoard,
+        currentPlayer: gameWinner ? currentPlayer : nextPlayer,
+        gameStatus: gameWinner ? 'finished' : 'playing',
+        winner: gameWinner,
+        lastMove: new Date()
+      });
+      console.log('Move made successfully');
+    } catch (error) {
+      console.error('Error making move:', error);
     }
   };
 
@@ -234,12 +266,15 @@ export default function Connect4Game({ onGameOver }) {
   };
 
   const resetGame = () => {
-    // Clear localStorage to reset the game
-    try {
-      localStorage.removeItem('connect4_demo_game');
-    } catch (error) {
-      console.error('Failed to clear game data:', error);
-    }
+    // Reset local state
+    setBoard(Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)));
+    setCurrentPlayer(PLAYER1);
+    setGameStatus('waiting');
+    setWinner(null);
+    setPlayerRole(null);
+    setOpponent(null);
+    setIsMyTurn(false);
+    setHoveredColumn(null);
 
     // Rejoin game
     setTimeout(() => {
