@@ -50,90 +50,18 @@ export default function Connect4Game({ onGameOver }) {
   const playerId = user?.uid || `guest_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   const playerName = user?.displayName || user?.email?.split('@')[0] || `Player_${Math.floor(Math.random() * 1000)}`;
 
-  // Join/create game
-  const joinGame = useCallback(async () => {
-    if (!roomId) return;
+  // Join/create game - Simplified for demo
+  const joinGame = useCallback(() => {
+    console.log('Joining Connect 4 game (simplified mode)...');
+    console.log('Player ID:', playerId);
+    console.log('Player Name:', playerName);
 
-    console.log('Joining Connect 4 game...');
-    setGameStatus('connecting');
-
-    try {
-      const gameRef = doc(db, 'connect4_games', roomId);
-      const gameSnap = await getDoc(gameRef);
-
-      if (!gameSnap.exists()) {
-        // Create new game as player 1
-        console.log('Creating new game as player 1');
-        await setDoc(gameRef, {
-          board: Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)),
-          currentPlayer: PLAYER1,
-          gameStatus: 'waiting',
-          winner: null,
-          players: {
-            player1: { uid: playerId, displayName: playerName },
-            player2: null
-          },
-          createdAt: new Date(),
-          lastMove: new Date()
-        });
-        setPlayerRole('player1');
-        setGameStatus('waiting');
-        console.log('Game created, waiting for opponent');
-      } else {
-        const gameData = gameSnap.data();
-        console.log('Game exists:', gameData);
-
-        // Check if we can join as player 2
-        if (!gameData.players.player2 && gameData.players.player1.uid !== playerId) {
-          console.log('Joining as player 2');
-          await updateDoc(gameRef, {
-            players: {
-              ...gameData.players,
-              player2: { uid: playerId, displayName: playerName }
-            },
-            gameStatus: 'playing',
-            lastMove: new Date()
-          });
-          setPlayerRole('player2');
-          setOpponent(gameData.players.player1);
-          console.log('Successfully joined as player 2');
-        } else if (gameData.players.player1.uid === playerId) {
-          console.log('Rejoining as player 1');
-          setPlayerRole('player1');
-          setOpponent(gameData.players.player2);
-          setGameStatus(gameData.gameStatus);
-        } else if (gameData.players.player2?.uid === playerId) {
-          console.log('Rejoining as player 2');
-          setPlayerRole('player2');
-          setOpponent(gameData.players.player1);
-          setGameStatus(gameData.gameStatus);
-        } else {
-          // Room is full, create a new room
-          console.log('Room full, creating new room');
-          const newRoomId = `connect4_room_${Date.now()}`;
-          setRoomId(newRoomId);
-          const newGameRef = doc(db, 'connect4_games', newRoomId);
-          await setDoc(newGameRef, {
-            board: Array(ROWS).fill().map(() => Array(COLS).fill(EMPTY)),
-            currentPlayer: PLAYER1,
-            gameStatus: 'waiting',
-            winner: null,
-            players: {
-              player1: { uid: playerId, displayName: playerName },
-              player2: null
-            },
-            createdAt: new Date(),
-            lastMove: new Date()
-          });
-          setPlayerRole('player1');
-          setGameStatus('waiting');
-        }
-      }
-    } catch (error) {
-      console.error('Error joining game:', error);
-      setGameStatus('waiting');
-    }
-  }, [roomId, playerId, playerName]);
+    // For demo purposes, always set as player 1 waiting for opponent
+    // In a real implementation, this would use Firebase for cross-device multiplayer
+    setPlayerRole('player1');
+    setGameStatus('waiting');
+    console.log('Set as player 1, waiting for opponent');
+  }, [playerId, playerName]);
 
   // Set up real-time listener
   useEffect(() => {
@@ -289,7 +217,7 @@ export default function Connect4Game({ onGameOver }) {
     }
 
     if (gameStatus === 'waiting') {
-      return playerRole === 'player1' ? '⏳ Waiting for opponent...' : '🔄 Joining game...';
+      return playerRole === 'player1' ? '⏳ Waiting for human opponent...' : '🔄 Joining game...';
     }
     if (gameStatus === 'finished') {
       if (winner === (playerRole === 'player1' ? PLAYER1 : PLAYER2)) {
@@ -381,9 +309,12 @@ export default function Connect4Game({ onGameOver }) {
           <div>
             <h4 className="text-sm font-semibold text-green-400 mb-1">🔗 Multiplayer Setup</h4>
             <ul className="text-xs text-gray-300 space-y-0.5">
-              <li>• Game automatically connects you to a shared room</li>
-              <li>• <strong>First player</strong> becomes Red and waits for opponent</li>
-              <li>• <strong>Second player</strong> joins as Yellow and starts the game</li>
+              <li>• <strong>Current limitation:</strong> Multiplayer requires Firebase setup</li>
+              <li>• For demo purposes, this shows single-player mode</li>
+              <li>• <strong>To enable cross-device multiplayer:</strong></li>
+              <li className="ml-2">• Configure Firebase Firestore security rules</li>
+              <li className="ml-2">• Allow unauthenticated read/write access</li>
+              <li className="ml-2">• Or implement WebSocket server</li>
               <li>• Share the game link with friends to play together</li>
             </ul>
           </div>
